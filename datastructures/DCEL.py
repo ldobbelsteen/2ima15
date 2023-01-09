@@ -163,7 +163,13 @@ if __name__ == "__main__":
     for v in dcel.vertices:
         if v.x == None or v.y == None or v.incident_half_edge == None:
             raise Exception("Nonevalue for vertex attribute")
-    
+        
+        if not v.incident_half_edge.twin.next.origin == v:
+            raise Exception("Incorrect DCEL")
+
     for h in dcel.half_edges:
         if h.origin == None or h.twin == None or h.incident_face == None or h.next == None or h.prev == None:
             raise Exception("Nonevalue for half edge attribute")
+
+        if not h.next.twin.prev.next.next.twin == h:
+            raise Exception("Incorrect DCEL")
