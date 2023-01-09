@@ -1,0 +1,7 @@
+from sortedcontainers import SortedKeyList
+
+def makeMontone(dcel):
+    vertices = dcel.vertices 
+    vertices.sort(key=lambda coordinate: (coordinate.y, coordinate.x))
+    eventList = SortedKeyList(key=lambda edge: edge.origin.y )
+
