@@ -1,3 +1,7 @@
+import math
+
+# This file is deprecated as the way I implemented the DCEL here does not easily work for polygons with holes.
+
 class HalfEdge:
     def __init__(self, origin):
         self.origin = origin
@@ -5,7 +9,20 @@ class HalfEdge:
         self.incident_face = None
         self.next = None
         self.prev = None
-
+        # Angle with respect to x-axis
+        self.angle = None
+    
+    def compute_angle(self):
+        # THIS FUNCTION EXPLICITLY COMPUTES ANGLES, WHICH MIGHT LEAD TO ROUNDING ERRORS
+        if self.twin == None:
+            raise Exception("Can not compute angle: twin undefined.")
+        dx = self.twin.origin.x - self.origin.x
+        dy = self.twin.origin.y - self.origin.y
+        length = math.sqrt(dx*dx + dy*dy)
+        if dy > 0:
+            self.angle = math.acos(dx/length)
+        else:
+            self.angle = 2*math.pi - math.acos(dx/length)
 
 class Vertex:
     def __init__(self, x, y):
@@ -68,18 +85,28 @@ class DCEL:
             half_edge_1.twin = half_edge_2
             half_edge_2.twin = half_edge_1
 
+            # Now that the twins have been assigned the angles can be computed
+            half_edge_1.compute_angle()
+            half_edge_2.compute_angle()
+
             self.half_edges.append(half_edge_1)
             self.half_edges.append(half_edge_2)
 
-        # Add Faces to DCEL
+        # Assign prev and next of each half-edge
         for v in self.vertices:
-            # Sort the outgoing edges clockwise order
-            # DEGENERATE CASE: if two outgoing edges are colinear and point in the same direction this order is not well defined
-            # TODO: Assign prev and next of each half-edge
+            # Sort the outgoing edges in counter-clockwise order
+            v.incident_half_edge.sort(key=lambda half_edge: half_edge.angle)
+            # Assign prev and next of each half-edge
+            nr_of_outgoing_edges = len(v.incident_half_edge)
+            for i in range(nr_of_outgoing_edges):
+                v.incident_half_edge[i].prev = v.incident_half_edge[(i+1) % nr_of_outgoing_edges].twin
+                v.incident_half_edge[i].next = v.incident_half_edge[i].twin.prev # TODO: I suspect this doesnt work, can be fixed by assigning next after all the prevs have been assigned
             # TODO: set incident half-edge to a single half-edge instead of list
-            pass
         
         # TODO: Add faces
+        # Since we have holes it is possible for two half-edges to be incident to the same face
+        # while not being part of the same chain of half-edges.
+        # I do not know how to identify this case with the current implementation.
             
 
     # every (half-)edge:
