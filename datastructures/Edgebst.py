@@ -39,7 +39,7 @@ class EdgebstNode:
             return
         self.right = EdgebstNode(val)
 
-    def delete(self, val,y):
+    def delete(self, val, y):
         if self == None:
             return self
         if edgeSmaller(val,self.val, y):
