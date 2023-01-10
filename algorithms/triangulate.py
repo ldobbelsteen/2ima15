@@ -71,8 +71,24 @@ def extract_boundaries(highest_leftmost: HalfEdge) -> tuple[list[Vertex], list[V
     highest and leftmost vertex.
     """
 
-    # TODO: implement
-    return ([], [])
+    left_boundary: list[Vertex] = [highest_leftmost]
+    right_boundary: list[Vertex] = []
+
+    switched_direction = False
+    current = highest_leftmost.next
+
+    while current != highest_leftmost:
+        if current.next.origin.y > current.origin.y:
+            switched_direction = True
+        if not switched_direction:
+            left_boundary.append(current)
+        else:
+            right_boundary.append(current)
+        current = current.next
+
+    right_boundary.reverse()
+
+    return (left_boundary, right_boundary)
 
 
 def merge_boundaries(left_boundary: list[Vertex], right_boundary: list[Vertex]) -> list[tuple[Vertex, bool]]:
@@ -82,5 +98,26 @@ def merge_boundaries(left_boundary: list[Vertex], right_boundary: list[Vertex]) 
     they are on the left or right boundary (true = left, false = right).
     """
 
-    # TODO: implement
-    return []
+    result: list[tuple[Vertex, bool]] = []
+
+    left_index = 0
+    right_index = 0
+
+    for _ in range(len(left_boundary) + len(right_boundary)):
+        left_finished = left_index == len(left_boundary)
+        right_finished = right_index == len(right_boundary)
+        if left_finished and not right_finished:
+            result.append(right_boundary[right_index])
+            right_index += 1
+        elif right_finished and not left_finished:
+            result.append(left_boundary[left_index])
+            left_index += 1
+        else:
+            if left_boundary[left_index].y >= right_boundary[right_index].y:
+                result.append(left_boundary[left_index])
+                left_index += 1
+            else:
+                result.append(right_boundary[right_index])
+                right_index += 1
+
+    return result
