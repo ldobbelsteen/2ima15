@@ -39,11 +39,12 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     # Draw polygons                                                   
     img = Image.new("RGB", size, "white") 
     img1 = ImageDraw.Draw(img)  
-    img1.polygon(outer_boundary_xy, fill="#eeeeff", outline="blue")
-    for h_xy in holes_xy:
-        img1.polygon(h_xy, fill="white", outline="blue")
+    img1.polygon(outer_boundary_xy, fill="#eeeeff", outline=None)
     for c_xy in solution_xy:
         img1.polygon(c_xy, fill="#ffeeee", outline="red")
+    img1.polygon(outer_boundary_xy, fill=None, outline="blue")
+    for h_xy in holes_xy:
+        img1.polygon(h_xy, fill=None, outline="blue")
     img.save(name + ".png")
 
 
