@@ -3,7 +3,15 @@ from enum import Enum
 class FaceType(Enum):
     OUTER = 0
     INTERIOR = 1
-    HOLE = 2
+    CONNECTED_HOLE = 2
+    DISCONNECTED_HOLE = 3
+
+class EnumType(Enum):
+    START = 0
+    END = 1
+    MERGE = 2
+    SPLIT = 3
+    REGULAR = 4
 
 # every (half-)edge:
 #   origin (vertex)    
@@ -17,7 +25,7 @@ class FaceType(Enum):
 
 # every face:
 #   outer_component (half-edge of outer cycle)
-#   inner_components (list of half-edges for inner cycles bounding faces)
+#   inner_components (list of half-edges for inner cycles bounding faces) REDUNDANT?
 
 class HalfEdge:
     def __init__(self, origin):
@@ -26,6 +34,8 @@ class HalfEdge:
         self.incident_face = None
         self.next = None
         self.prev = None
+        # Required for algorithm
+        self.helper = None
 
 
 class Vertex:
@@ -33,13 +43,15 @@ class Vertex:
         self.x = x
         self.y = y
         self.incident_half_edge = None
+        # Required for algorithm
+        self.type = None # TODO: compute this in DCEL constructor
 
 
 class Face:
     def __init__(self):
         self.outer_component = None
-        self.inner_components = []
-        self.face_type = None
+        #self.inner_components = []
+        self.type = None
 
 
 class DCEL:
@@ -69,11 +81,11 @@ class DCEL:
 
         # Outer face incident to outer boundary
         boundary_outer_face = Face()
-        boundary_outer_face.face_type = FaceType.OUTER
+        boundary_outer_face.type = FaceType.OUTER
         # The face that is the interior of the polygon 
         # (our input format guarantees that at initalization there is at most 1 such face)
         interior_face = Face()
-        interior_face.face_type = FaceType.INTERIOR
+        interior_face.type = FaceType.INTERIOR
 
         # Initialize vertices and edges on outer boundary:
         self.process_boundary(outer_boundary, interior_face, boundary_outer_face)
@@ -81,7 +93,7 @@ class DCEL:
         # Initialize vertices and edge on hole boundaries:
         for hole_boundary in holes:
             hole_outer_face = Face()
-            hole_outer_face.face_type = FaceType.HOLE
+            hole_outer_face.type = FaceType.DISCONNECTED_HOLE
             self.process_boundary(hole_boundary, hole_outer_face, interior_face)
             self.faces.append(hole_outer_face)
         
@@ -89,12 +101,42 @@ class DCEL:
         self.faces.append(boundary_outer_face)
 
 
-    def insert_edge(self, v1, v2):
+    def insert_edge(self, v1, v2, f):
         """
-        Inserts an edge between v1 and v2, v1 and v2 should be vertices in self.vertices
+        Inserts an edge between v1 and v2 through face f, 
+        v1 and v2 should be vertices in self.vertices and f should be a face in self.faces.
         """
-        # TODO: implement this
-        pass
+        v1_edge_incident_to_f = v1.incident_half_edge
+        while v1_edge_incident_to_f.incident_face != f:
+            v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
+
+        v2_edge_incident_to_f = v2.incident_half_edge
+        while v2_edge_incident_to_f.incident_face != f:
+            v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
+
+        h1 = HalfEdge(v1)
+        h2 = HalfEdge(v2)
+
+        h1.twin = h2
+        h2.twin = h1
+
+        h1.next = v2_edge_incident_to_f
+        v2_edge_incident_to_f.prev = h1
+        h1.prev = v1_edge_incident_to_f.prev
+        v1_edge_incident_to_f.prev.next = h1
+        h2.next = v1_edge_incident_to_f
+        v1_edge_incident_to_f.prev = h2
+        h2.prev = v2_edge_incident_to_f.prev
+        v2_edge_incident_to_f.prev.next = h2
+
+        # In the case where the inserted edge connects a not yet connected hole boundary to 
+        # the graph connected to the outer boundary we do not need to alter any faces
+        if (v1_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
+            v1_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
+        elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
+            v2_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
+        else:
+            pass #TODO
 
 
     def delete_edge(self, e):
@@ -109,7 +151,7 @@ class DCEL:
         """
         Returns the faces that are contained in the polygon.
         """
-        return [f for f in self.faces if f.face_type == FaceType.INTERIOR]
+        return [f for f in self.faces if f.type == FaceType.INTERIOR]
 
 
     def format_solution(self):
@@ -150,6 +192,8 @@ class DCEL:
             h1.twin = h2
             h2.twin = h1
 
+            # h1 goes counter-clockwise along the outer face
+            # h2 goes clock-wise along the inner face
             h1.incident_face = outer_face
             h2.incident_face = inner_face
 
@@ -196,7 +240,7 @@ class DCEL:
         self.half_edges.append(h1)
         self.half_edges.append(h2)
 
-        outer_face.inner_components.append(h1)
+        #outer_face.inner_components.append(h1)
         inner_face.outer_component = h2
 
 
