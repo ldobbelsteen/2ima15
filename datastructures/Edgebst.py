@@ -1,7 +1,7 @@
-import Rationals as rat
+from datastructures.Rationals import Rationals as rat
 
 def slope(edge):
-    rat(edge.twin.origin.x - edge.origin.x, edge.twin.origin.y - edge.origin.y)
+    return rat(edge.twin.origin.x - edge.origin.x, edge.twin.origin.y - edge.origin.y)
 
 def edgeSmaller(edge1,edge2,y):
     xEdge1 = rat(edge1.origin.x) + slope(edge1) * rat(y-edge1.origin.y)
@@ -10,7 +10,7 @@ def edgeSmaller(edge1,edge2,y):
 
 def leftOfVertex(edge,vertex):
     xEdge = rat(edge.origin.x) + slope(edge) * rat(vertex.y-edge.origin.y)
-    return xEdge < vertex.x 
+    return xEdge < rat(vertex.x) 
 
 
 class EdgebstNode:
@@ -68,4 +68,4 @@ class EdgebstNode:
             else:
                 return self.val
         else:
-            return self.leftEdgeFinder(self.left,vertex)
+            return self.left.leftEdgeFinder(vertex)
