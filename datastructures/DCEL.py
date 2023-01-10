@@ -1,3 +1,10 @@
+from enum import Enum
+
+class FaceType(Enum):
+    OUTER = 1
+    INTERIOR = 2
+    HOLE = 3
+
 # every (half-)edge:
 #   origin (vertex)    
 #   twin (half-edge)   
@@ -32,7 +39,7 @@ class Face:
     def __init__(self):
         self.outer_component = None
         self.inner_components = []
-        self.is_inner_face = None
+        self.face_type = None
 
 
 class DCEL:
@@ -62,11 +69,11 @@ class DCEL:
 
         # Outer face incident to outer boundary
         boundary_outer_face = Face()
-        boundary_outer_face.is_inner_face = False
+        boundary_outer_face.face_type = FaceType.OUTER
         # The face that is the interior of the polygon 
         # (our input format guarantees that at initalization there is at most 1 such face)
         interior_face = Face()
-        interior_face.is_inner_face = True
+        interior_face.face_type = FaceType.INTERIOR
 
         # Initialize vertices and edges on outer boundary:
         self.process_boundary(outer_boundary, interior_face, boundary_outer_face)
@@ -74,7 +81,7 @@ class DCEL:
         # Initialize vertices and edge on hole boundaries:
         for hole_boundary in holes:
             hole_outer_face = Face()
-            hole_outer_face.is_inner_face = False
+            hole_outer_face.face_type = FaceType.HOLE
             self.process_boundary(hole_boundary, hole_outer_face, interior_face)
             self.faces.append(hole_outer_face)
         
@@ -88,6 +95,42 @@ class DCEL:
         """
         # TODO: implement this
         pass
+
+
+    def delete_edge(self, e):
+        """
+        Deletes the edge e, e should be a vertex in self.vertices
+        """
+        # TODO: implement this
+        pass
+
+
+    def interior_faces(self):
+        """
+        Returns the faces that are contained in the polygon.
+        """
+        return [f for f in self.faces if f.face_type == FaceType.INTERIOR]
+
+
+    def format_solution(self):
+        """
+        Converts the DCEL to the output format:
+        https://cgshop.ibr.cs.tu-bs.de/competition/cg-shop-2023/#instance-format
+        """
+        polygons = list()
+
+        # Each interior face corresponds to a polygon:
+        for f in self.interior_faces():
+            polygon = list()
+            e = f.outer_component
+            polygon.append({"x": e.origin.x, "y": e.origin.y})
+            e = e.next
+            while e != e.outer_component:
+                polygon.append({"x": e.origin.x, "y": e.origin.y})
+                e = e.next
+            polygons.append(polygon)
+        
+        return {"polygons": polygons}
 
     def process_boundary(self, boundary, inner_face, outer_face):
         """
