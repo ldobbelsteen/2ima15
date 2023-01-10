@@ -1,7 +1,23 @@
-from sortedcontainers import SortedKeyList
-
+import sys
+sys.path.insert(0,"..")
+from datastructures.Edgebst import *
 def makeMontone(dcel):
+    def handleVertex(vertex):
+        return
+
+
+
+
+
+
+
+
     vertices = dcel.vertices 
     vertices.sort(key=lambda coordinate: (coordinate.y, coordinate.x))
-    eventList = SortedKeyList(key=lambda edge: edge.origin.y )
+    eventList = EdgebstNode()
+    while vertices.length != 0:
+        vertex = vertices.pop 
+        handleVertex(vertex)
+    return dcel 
+
 
