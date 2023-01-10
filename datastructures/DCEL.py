@@ -94,7 +94,7 @@ class DCEL:
         for hole_boundary in holes:
             hole_outer_face = Face()
             hole_outer_face.type = FaceType.DISCONNECTED_HOLE
-            self.process_boundary(hole_boundary, hole_outer_face, interior_face)
+            self.process_boundary(hole_boundary, interior_face, hole_outer_face)
             self.faces.append(hole_outer_face)
         
         self.faces.append(interior_face)
