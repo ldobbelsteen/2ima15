@@ -4,16 +4,16 @@ class Rationals:
         self.den = denominator
     
     def __eq__(self, other):
-        self.num * other.den == other.num * self.den 
+        return self.num * other.den == other.num * self.den 
 
     def __ge__(self, other):
-        self.num * other.den >= other.num * self.den  
+        return self.num * other.den >= other.num * self.den  
 
     def __le__(self, other):
-        self.num * other.den <= other.num * self.den  
+        return self.num * other.den <= other.num * self.den  
 
     def __gt__(self, other):
-        self.num * other.den > other.num * self.den  
+        return self.num * other.den > other.num * self.den  
 
     def __lt__(self, other):
-        self.num * other.den < other.num * self.den 
+        return self.num * other.den < other.num * self.den 
