@@ -1,9 +1,9 @@
 from enum import Enum
 
 class FaceType(Enum):
-    OUTER = 1
-    INTERIOR = 2
-    HOLE = 3
+    OUTER = 0
+    INTERIOR = 1
+    HOLE = 2
 
 # every (half-)edge:
 #   origin (vertex)    
@@ -125,12 +125,13 @@ class DCEL:
             e = f.outer_component
             polygon.append({"x": e.origin.x, "y": e.origin.y})
             e = e.next
-            while e != e.outer_component:
+            while e != f.outer_component:
                 polygon.append({"x": e.origin.x, "y": e.origin.y})
                 e = e.next
             polygons.append(polygon)
         
         return {"polygons": polygons}
+    
 
     def process_boundary(self, boundary, inner_face, outer_face):
         """
