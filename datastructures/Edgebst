@@ -1,0 +1,7 @@
+import Rationals as rat
+
+def slope(edge):
+    rat(edge.twin.origin.x - edge.origin.x, edge.twin.origin.y - edge.origin.y)
+
+def edgesmaller(edge1,edge2,y):
+    xEdge1 = rat(edge1.origin.x) + slope(edge1) * rat(y-edge1.origin.y)

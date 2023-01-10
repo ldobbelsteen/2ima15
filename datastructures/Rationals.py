@@ -2,9 +2,13 @@ import math
 
 class Rationals:
     def __init__(self,numerator,denominator=1):
-        gcd = math.gcd(self.num ,self.den)
-        self.num = numerator // gcd
-        self.den = denominator // gcd
+        gcd = math.gcd(numerator ,denominator)
+        if (denominator >= 0):
+            self.num = numerator // gcd
+            self.den = denominator // gcd
+        else:
+            self.num = numerator // gcd * -1
+            self.den = denominator // gcd * -1
     
     def __eq__(self, other):
         return self.num * other.den == other.num * self.den 
@@ -23,6 +27,9 @@ class Rationals:
 
     def __mul__(self, other):
         return Rationals(self.num * other.num, self.den * other.den)
+    
+    def __add__(self,other):
+        return Rationals(self.num * other.den + other.num * self.den, self.den * other.den)
 
     __rmul__ = __mul__
 
