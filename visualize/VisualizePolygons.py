@@ -25,6 +25,7 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     max_y = max([p[1] for p in outer_boundary_xy])
     outer_boundary_xy = [(p[0] - min_x, p[1] - min_y) for p in outer_boundary_xy]
     holes_xy = [[(p[0] - min_x, p[1] - min_y) for p in h] for h in holes_xy]
+    solution_xy = [[(p[0] - min_x, p[1] - min_y) for p in h] for h in solution_xy]
 
     # Set width and height to width and height of polygon
     width = (max_x - min_x) * resolution
@@ -33,6 +34,7 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     # Flip y-axis such that 0,0 is now bottom left in our visualization
     outer_boundary_xy = [(p[0]*resolution, height - p[1]*resolution) for p in outer_boundary_xy]
     holes_xy = [[(p[0]*resolution, height - p[1]*resolution) for p in h] for h in holes_xy]
+    solution_xy = [[(p[0]*resolution, height - p[1]*resolution) for p in h] for h in solution_xy]
 
     # Draw polygons                                                   
     img = Image.new("RGB", size, "white") 
