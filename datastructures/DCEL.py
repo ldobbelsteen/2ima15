@@ -6,7 +6,7 @@ class FaceType(Enum):
     CONNECTED_HOLE = 2
     DISCONNECTED_HOLE = 3
 
-class EnumType(Enum):
+class VertexType(Enum):
     START = 0
     END = 1
     MERGE = 2
