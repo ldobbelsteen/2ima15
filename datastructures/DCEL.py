@@ -27,17 +27,6 @@ class VertexType(Enum):
 #   outer_component (half-edge of outer cycle)
 #   inner_components (list of half-edges for inner cycles bounding faces) REDUNDANT?
 
-class HalfEdge:
-    def __init__(self, origin):
-        self.origin = origin
-        self.twin = None
-        self.incident_face = None
-        self.next = None
-        self.prev = None
-        # Required for algorithm
-        self.helper = None
-
-
 class Vertex:
     def __init__(self, x, y):
         self.x = x
@@ -45,6 +34,17 @@ class Vertex:
         self.incident_half_edge = None
         # Required for algorithm
         self.type = None # TODO: compute this in DCEL constructor
+
+
+class HalfEdge:
+    def __init__(self, origin: Vertex):
+        self.origin = origin
+        self.twin = None
+        self.incident_face = None
+        self.next = None
+        self.prev = None
+        # Required for algorithm
+        self.helper = None
 
 
 class Face:
@@ -64,7 +64,7 @@ class DCEL:
         faces: list of Faces
     """
 
-    def __init__(self, outer_boundary, holes=[]):
+    def __init__(self, outer_boundary: list(dict), holes: list(dict) = []):
         """
         Creates DCEL from input
         
@@ -101,7 +101,7 @@ class DCEL:
         self.faces.append(boundary_outer_face)
 
 
-    def insert_edge(self, v1, v2, f):
+    def insert_edge(self, v1: Vertex, v2: Vertex, f: Face):
         """
         Inserts an edge between v1 and v2 through face f, 
         v1 and v2 should be vertices in self.vertices and f should be a face in self.faces.
@@ -161,7 +161,7 @@ class DCEL:
             self.faces.append(f2)
 
 
-    def delete_edge(self, e):
+    def delete_edge(self, e: HalfEdge):
         """
         Deletes the edge e, e should be a vertex in self.vertices
         """
@@ -197,7 +197,7 @@ class DCEL:
         return {"polygons": polygons}
     
 
-    def process_boundary(self, boundary, inner_face, outer_face):
+    def process_boundary(self, boundary: list(dict), inner_face: Face, outer_face: Face):
         """
         Auxiliary function that creates vertices and half edges corresponding to input boundary
         """
