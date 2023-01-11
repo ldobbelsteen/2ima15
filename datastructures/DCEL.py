@@ -113,10 +113,10 @@ class DCEL:
             """
             # Edge points to the right
             if v2.x-v1.x > 0:
-                return (0, rat(v2.x - v1.x, v2.y - v1.y))
+                return (0, rat(v2.y - v1.y, v2.x - v1.x))
             # Edge points to the left
             elif v2.x-v1.x < 0:
-                return (2, rat(v2.x - v1.x, v2.y - v1.y))
+                return (2, rat(v2.y - v1.y, v2.x - v1.x))
             # Edge points vertically upwards
             elif v2.y > v1.y:
                 return (1, None)
@@ -137,40 +137,80 @@ class DCEL:
         # The direction vertically downwards is included in the interval between v1_incident_edge
         # and its prev
         else:
-            if (self.edge_angle(v1, v1_incident_edge.twin.origin) < self.edge_angle(v1, v2) or
-                self.edge_angle(v1, v1_incident_edge.prev.origin) > self.edge_angle(v1, v2)):
+            if (self.edge_angle(v1, v1_incident_edge.twin.origin) > self.edge_angle(v1, v2) or
+                self.edge_angle(v1, v1_incident_edge.prev.origin) < self.edge_angle(v1, v2)):
                 return True
             else:
                 return False
 
 
-    def insert_edge_no_face(self, v1: Vertex, v2: Vertex):
-        v1_outgoing_half_edges = [v1.incident_half_edge]
-        outgoing_half_edge = v1.incident_half_edge.prev.twin
-        while outgoing_half_edge != v1.incident_half_edge:
-            v1_outgoing_half_edges.append(outgoing_half_edge)
-            outgoing_half_edge = outgoing_half_edge.prev.twin
-            print("computing incident v1 edges!")
-        v1_outgoing_half_edges.sort(key=lambda e: self.edge_angle(v1, e.twin.origin))
+    def insert_edge(self, v1: Vertex, v2: Vertex):
+        """
+        Inserts an edge between v1 and v2, v1 and v2 should be vertices in self.vertices.
+        """
 
+        # Find the outgoing half edge of v1 that comes after the new edge in counter-clockwise order
         v1_edge_incident_to_f = v1.incident_half_edge
         while not self.in_between(v1, v2, v1_edge_incident_to_f):
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
-            print("searching v1_incident edge!")
 
-        v2_outgoing_half_edges = [v2.incident_half_edge]
-        outgoing_half_edge = v2.incident_half_edge.prev.twin
-        while outgoing_half_edge != v2.incident_half_edge:
-            v2_outgoing_half_edges.append(outgoing_half_edge)
-        v2_outgoing_half_edges.sort(key=lambda e: self.edge_angle(v2, e.twin.origin))
+        f = v1_edge_incident_to_f.incident_face
 
+        # Find the outgoing half edge of v2 that comes after the new edge in counter-clockwise order
         v2_edge_incident_to_f = v2.incident_half_edge
-        while not self.in_between(v2, v1, v2_edge_incident_to_f):
+        while v2_edge_incident_to_f.incident_face != f:
             v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
+
+        h1 = HalfEdge(v1)
+        h2 = HalfEdge(v2)
+
+        h1.twin = h2
+        h2.twin = h1
+
+        h1.next = v2_edge_incident_to_f
+        h1.prev = v1_edge_incident_to_f.prev
+        h2.next = v1_edge_incident_to_f
+        h2.prev = v2_edge_incident_to_f.prev
+
+        v1_edge_incident_to_f.prev.next = h1
+        v2_edge_incident_to_f.prev.next = h2
+        v1_edge_incident_to_f.prev = h2
+        v2_edge_incident_to_f.prev = h1
+
+        # In the case where the inserted edge connects a not yet connected hole boundary to 
+        # the graph connected to the outer boundary we do not need to alter any faces
+        if (v1_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
+            v1_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
+        elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
+            v2_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
+        else:
+            # Split the intersected face into two new faces
+            f1 = Face()
+            f1.type = FaceType.INTERIOR
+            f1.outer_component = h1
+            edge = h1
+            h1.incident_face = f1
+            edge = edge.next
+            while edge != h1:
+                edge.incident_face = f1
+                edge = edge.next
+            f2 = Face()
+            f2.type = FaceType.INTERIOR
+            f2.outer_component = h2
+            edge = h2
+            h2.incident_face = f2
+            edge = edge.next
+            while edge != h2:
+                edge.incident_face = f2
+                edge = edge.next
+            self.faces.remove(f)
+            self.faces.append(f1)
+            self.faces.append(f2)
     
 
     def insert_edge_with_face(self, v1: Vertex, v2: Vertex, f: Face):
         """
+        [DEPRECATED]
         Inserts an edge between v1 and v2 through face f, 
         v1 and v2 should be vertices in self.vertices and f should be a face in self.faces.
         """
