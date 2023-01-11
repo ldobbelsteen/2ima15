@@ -94,7 +94,7 @@ class DCEL:
         for hole_boundary in holes:
             hole_outer_face = Face()
             hole_outer_face.type = FaceType.DISCONNECTED_HOLE
-            self.process_boundary(hole_boundary, hole_outer_face, interior_face)
+            self.process_boundary(hole_boundary, interior_face, hole_outer_face)
             self.faces.append(hole_outer_face)
         
         self.faces.append(interior_face)
@@ -121,13 +121,14 @@ class DCEL:
         h2.twin = h1
 
         h1.next = v2_edge_incident_to_f
-        v2_edge_incident_to_f.prev = h1
         h1.prev = v1_edge_incident_to_f.prev
-        v1_edge_incident_to_f.prev.next = h1
         h2.next = v1_edge_incident_to_f
-        v1_edge_incident_to_f.prev = h2
         h2.prev = v2_edge_incident_to_f.prev
+
+        v1_edge_incident_to_f.prev.next = h1
         v2_edge_incident_to_f.prev.next = h2
+        v1_edge_incident_to_f.prev = h2
+        v2_edge_incident_to_f.prev = h1
 
         # In the case where the inserted edge connects a not yet connected hole boundary to 
         # the graph connected to the outer boundary we do not need to alter any faces
@@ -136,7 +137,28 @@ class DCEL:
         elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
             v2_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
         else:
-            pass #TODO
+            # Split the intersected face into two new faces
+            f1 = Face()
+            f1.type = FaceType.INTERIOR
+            f1.outer_component = h1
+            edge = h1
+            h1.incident_face = f1
+            edge = edge.next
+            while edge != h1:
+                edge.incident_face = f1
+                edge = edge.next
+            f2 = Face()
+            f2.type = FaceType.INTERIOR
+            f2.outer_component = h2
+            edge = h2
+            h2.incident_face = f2
+            edge = edge.next
+            while edge != h2:
+                edge.incident_face = f2
+                edge = edge.next
+            self.faces.remove(f)
+            self.faces.append(f1)
+            self.faces.append(f2)
 
 
     def delete_edge(self, e):
