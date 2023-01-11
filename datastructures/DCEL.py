@@ -64,7 +64,7 @@ class DCEL:
         faces: list of Faces
     """
 
-    def __init__(self, outer_boundary: list(dict), holes: list(dict) = []):
+    def __init__(self, outer_boundary: list[dict], holes: list[dict]):
         """
         Creates DCEL from input
         
@@ -197,7 +197,7 @@ class DCEL:
         return {"polygons": polygons}
     
 
-    def process_boundary(self, boundary: list(dict), inner_face: Face, outer_face: Face):
+    def process_boundary(self, boundary: list[dict], inner_face: Face, outer_face: Face):
         """
         Auxiliary function that creates vertices and half edges corresponding to input boundary
         """
@@ -263,7 +263,10 @@ class DCEL:
         self.half_edges.append(h2)
 
         #outer_face.inner_components.append(h1)
-        inner_face.outer_component = h2
+        if outer_face.type == FaceType.OUTER:
+            inner_face.outer_component = h2
+        else:
+            outer_face.outer_component = h1
 
 
 # For testing purposes:
