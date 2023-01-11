@@ -33,8 +33,9 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 stack.append(vertices[i - 1])
                 stack.append(vertices[i])
             else:
+                is_left_side = vertices[i][1]
                 vertex = stack.pop()
-                while len(stack) > 0 and True:  # TODO: vertex sees top of stack condition
+                while len(stack) > 0 and ((not is_left_turn(vertices[i], vertex, stack[-1])) if is_left_side else is_left_turn(vertices[i], vertex, stack[-1])):
                     vertex = stack.pop()
                     dcel.insert_edge(vertices[i], vertex, face)
                 stack.append(vertex)
@@ -121,3 +122,20 @@ def merge_boundaries(left_boundary: list[Vertex], right_boundary: list[Vertex]) 
                 right_index += 1
 
     return result
+
+
+def is_left_turn(first: Vertex, middle: Vertex, end: Vertex) -> bool:
+    """
+    Return whether three vertices form a left turn or a right turn. True
+    is returned when they form a left turn and false when they form a right
+    turn.
+
+    Based on https://algorithmtutor.com/Computational-Geometry/Determining-if-two-consecutive-segments-turn-left-or-right/
+    """
+
+    first_end = (end.x - first.x, end.y - first.y)
+    first_middle = (middle.x - first.x, middle.y - first.y)
+    direction = first_end[0] * \
+        first_middle[1] - first_middle[0] * first_end[1]
+
+    return direction <= 0
