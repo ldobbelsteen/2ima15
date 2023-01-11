@@ -1,4 +1,5 @@
 from enum import Enum
+from datastructures.Rationals import Rationals as rat
 
 class FaceType(Enum):
     OUTER = 0
@@ -11,7 +12,8 @@ class VertexType(Enum):
     END = 1
     MERGE = 2
     SPLIT = 3
-    REGULAR = 4
+    REGULAR_RIGHT = 4
+    REGULAR_LEFT = 5
 
 # every (half-)edge:
 #   origin (vertex)    
@@ -101,11 +103,78 @@ class DCEL:
         self.faces.append(boundary_outer_face)
 
 
-    def insert_edge(self, v1: Vertex, v2: Vertex, f: Face):
+    def edge_angle(self, v1: Vertex, v2: Vertex):
+            """
+            Returns a pair (a, b), where a is either 0, 1, 2, or 3, and b is the slope of the edge (v1, v2) (or None if the slope is (-)infinity).
+            a = 0 implies that (v1, v2) points to the right
+            a = 1 implies that (v1, v2) points upwards
+            a = 2 implies that (v1, v2) points to the left
+            a = 3 implies that (v1, v2) points downwards
+            """
+            # Edge points to the right
+            if v2.x-v1.x > 0:
+                return (0, rat(v2.x - v1.x, v2.y - v1.y))
+            # Edge points to the left
+            elif v2.x-v1.x < 0:
+                return (2, rat(v2.x - v1.x, v2.y - v1.y))
+            # Edge points vertically upwards
+            elif v2.y > v1.y:
+                return (1, None)
+            # Edge points vertically downwards
+            else:
+                return (3, None)
+    
+    def in_between(self, v1, v2, v1_incident_edge):
+        """
+        Checks whether the edge (v1, v2) falls in between v1_incident_edge and its prev
+        """
+        if self.edge_angle(v1, v1_incident_edge.twin.origin) > self.edge_angle(v1, v1_incident_edge.prev.origin):
+            if (self.edge_angle(v1, v1_incident_edge.twin.origin) > self.edge_angle(v1, v2) and
+                self.edge_angle(v1, v1_incident_edge.prev.origin) < self.edge_angle(v1, v2)):
+                return True
+            else:
+                return False
+        # The direction vertically downwards is included in the interval between v1_incident_edge
+        # and its prev
+        else:
+            if (self.edge_angle(v1, v1_incident_edge.twin.origin) < self.edge_angle(v1, v2) or
+                self.edge_angle(v1, v1_incident_edge.prev.origin) > self.edge_angle(v1, v2)):
+                return True
+            else:
+                return False
+
+
+    def insert_edge_no_face(self, v1: Vertex, v2: Vertex):
+        v1_outgoing_half_edges = [v1.incident_half_edge]
+        outgoing_half_edge = v1.incident_half_edge.prev.twin
+        while outgoing_half_edge != v1.incident_half_edge:
+            v1_outgoing_half_edges.append(outgoing_half_edge)
+            outgoing_half_edge = outgoing_half_edge.prev.twin
+            print("computing incident v1 edges!")
+        v1_outgoing_half_edges.sort(key=lambda e: self.edge_angle(v1, e.twin.origin))
+
+        v1_edge_incident_to_f = v1.incident_half_edge
+        while not self.in_between(v1, v2, v1_edge_incident_to_f):
+            v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
+            print("searching v1_incident edge!")
+
+        v2_outgoing_half_edges = [v2.incident_half_edge]
+        outgoing_half_edge = v2.incident_half_edge.prev.twin
+        while outgoing_half_edge != v2.incident_half_edge:
+            v2_outgoing_half_edges.append(outgoing_half_edge)
+        v2_outgoing_half_edges.sort(key=lambda e: self.edge_angle(v2, e.twin.origin))
+
+        v2_edge_incident_to_f = v2.incident_half_edge
+        while not self.in_between(v2, v1, v2_edge_incident_to_f):
+            v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
+    
+
+    def insert_edge_with_face(self, v1: Vertex, v2: Vertex, f: Face):
         """
         Inserts an edge between v1 and v2 through face f, 
         v1 and v2 should be vertices in self.vertices and f should be a face in self.faces.
         """
+
         v1_edge_incident_to_f = v1.incident_half_edge
         while v1_edge_incident_to_f.incident_face != f:
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
@@ -267,6 +336,13 @@ class DCEL:
             inner_face.outer_component = h2
         else:
             outer_face.outer_component = h1
+
+    
+    def compute_vertex_types(self):
+        # Find the topmost vertex (if there are multiple such vertices we take the first)
+        v_max = None
+        for v in self.vertices:
+            pass # TODO:!!!
 
 
 # For testing purposes:
