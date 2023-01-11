@@ -69,3 +69,4 @@ class EdgebstNode:
                 return self.val
         else:
             return self.left.leftEdgeFinder(vertex)
+    
