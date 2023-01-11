@@ -340,9 +340,58 @@ class DCEL:
     
     def compute_vertex_types(self):
         # Find the topmost vertex (if there are multiple such vertices we take the first)
-        v_max = None
+        v_max = self.vertices[0]
         for v in self.vertices:
-            pass # TODO:!!!
+            if v_max.y > v.y:
+                v_max = v
+        # we start at the top of the outer boundery where the topmost vertex is always located
+        # we will always move downwards for the first edge 
+        v_max.type = VertexType.START
+        up = False
+        # cycle trough all the edges of the face and their respective origins 
+        current_edge = v_max.incident_half_edge.next
+        current_vertex = current_edge.origin
+        if v_max.x < current_vertex.x:
+            right = True
+        else:
+            right = False
+        while current_vertex != v_max:
+            next_edge = current_edge.next
+            next_vertex = next_edge.origin
+            if current_vertex.y >= next_vertex.y:
+                next_up = False
+                if not up:
+                    #if we go clockwise going down means P is to our left 
+                    if right:
+                        current_vertex.type = VertexType.REGULAR_LEFT
+                    else: 
+                        current_vertex.type = VertexType.REGULAR_RIGHT
+                else:   
+                    print("hier moet ik nog tussen start  en split checken ")
+            else:
+                next_up = True
+                if up:
+                    if right:
+                        current_vertex.type = VertexType.REGULAR_RIGHT
+                    else: 
+                        current_vertex.type = VertexType.REGULAR_LEFT
+                else:
+                    print("hier moet ik nog tussen end  en merge checken ")
+            current_edge = next_edge
+            current_vertex = next_vertex
+            up = next_up
+            
+
+                
+
+
+
+        
+
+
+
+            
+
 
 
 # For testing purposes:

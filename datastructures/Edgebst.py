@@ -1,7 +1,7 @@
 from datastructures.Rationals import Rationals as rat
 
 def slope(edge):
-    return rat(edge.twin.origin.x - edge.origin.x, edge.twin.origin.y - edge.origin.y)
+    return rat(edge.twin.origin.y - edge.origin.y, edge.twin.origin.x - edge.origin.x)
 
 def edgeSmaller(edge1,edge2,y):
     xEdge1 = rat(edge1.origin.x) + slope(edge1) * rat(y-edge1.origin.y)
