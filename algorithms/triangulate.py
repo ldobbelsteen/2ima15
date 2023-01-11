@@ -29,6 +29,7 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 while len(stack) > 0:
                     vertex = stack.pop()
                     if len(stack) > 0:
+                        # TODO: use correct face
                         dcel.insert_edge(vertices[i], vertex, face)
                 stack.append(vertices[i - 1])
                 stack.append(vertices[i])
@@ -37,6 +38,7 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 vertex = stack.pop()
                 while len(stack) > 0 and ((not is_left_turn(vertices[i], vertex, stack[-1])) if is_left_side else is_left_turn(vertices[i], vertex, stack[-1])):
                     vertex = stack.pop()
+                    # TODO: use correct face
                     dcel.insert_edge(vertices[i], vertex, face)
                 stack.append(vertex)
                 stack.append(vertices[i])
@@ -46,6 +48,7 @@ def triangulate_monotone_polygon(dcel: DCEL):
         stack.pop()
         while len(stack) > 1:
             vertex = stack.pop()
+            # TODO: use correct face
             dcel.insert_edge(vertices[-1], vertex, face)
 
 
