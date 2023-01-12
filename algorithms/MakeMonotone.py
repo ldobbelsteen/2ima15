@@ -4,7 +4,7 @@ from datastructures.Edgebst import *
 from datastructures.DCEL import *
 
 
-def makeMontone(dcel: DCEL):
+def makeMonotone(dcel: DCEL):
     def handleVertex(vertex: Vertex):
         if vertex.type == VertexType.START:
             # we state the left edge is the incident edge because of the counter clock wise rotation.
@@ -36,7 +36,7 @@ def makeMontone(dcel: DCEL):
                 dcel.insert_edge(edgePrime.helper, vertex)
             edgePrime.helper = vertex
             edgePrime.twin.helper = vertex
-        if vertex.type == VertexType.REGULARRIGHT:
+        if vertex.type == VertexType.REGULAR_RIGHT:
             if vertex.incident_half_edge.twin.origin.y >= vertex.y:
                 upperEdge = vertex.incident_half_edge
                 lowerEdge = vertex.incident_half_edge.twin
@@ -48,7 +48,7 @@ def makeMontone(dcel: DCEL):
             status.delete(upperEdge,vertex.y)
             status.insert(lowerEdge,vertex.y)
             lowerEdge.helper = vertex
-        if vertex.type == VertexType.REGULARLEFT:
+        if vertex.type == VertexType.REGULAR_LEFT:
             edge = status.leftEdgeFinder(vertex)
             if edge.helper.type == VertexType.MERGE:
                 dcel.insert_edge(edge.helper, vertex)
@@ -57,8 +57,8 @@ def makeMontone(dcel: DCEL):
     vertices = dcel.vertices 
     vertices.sort(key=lambda coordinate: (coordinate.y, coordinate.x),reverse=True)
     status = EdgebstNode()
-    while vertices.length != 0:
-        vertex = vertices.pop 
+    while len(vertices) != 0:
+        vertex = vertices.pop()
         handleVertex(vertex)
     return dcel 
 
