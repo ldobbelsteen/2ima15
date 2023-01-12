@@ -378,6 +378,24 @@ class DCEL:
             outer_face.outer_component = h1
 
     
+    def leftmost_edge(self, e1, e2):
+        """
+        Returns the leftmost_edge given two adjacent edges that both point upwards or both point downwards.
+        """
+        angle_e1 = self.edge_angle(e1.origin, e1.twin.origin)
+        angle_e2 = self.edge_angle(e2.origin, e2.twin.origin)
+        if angle_e1[0] >= 2 and  angle_e2[0] >= 2 or angle_e1[0] < 2 and  angle_e2[0] < 2:
+            if angle_e1 < angle_e2:
+                return e1
+            else:
+                return e2
+        else:
+            if angle_e1 < angle_e2:
+                return e2
+            else:
+                return e1
+    
+
     def compute_vertex_types(self):
         # Find the topmost vertex (if there are multiple such vertices we take the first)
         v_max = self.vertices[0]
