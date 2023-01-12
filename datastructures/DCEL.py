@@ -398,16 +398,24 @@ class DCEL:
         while current_vertex != v_max:
             next_edge = current_edge.next
             next_vertex = next_edge.origin
+            if current_vertex.x >= next_vertex.x:
+                going_right = False
+            else:
+                going_right = True
+
             if current_vertex.y >= next_vertex.y:
                 next_up = False
                 if not up:
                     #if we go clockwise going down means P is to our left 
-                    if right:
+                    if right :
                         current_vertex.type = VertexType.REGULAR_LEFT
                     else: 
                         current_vertex.type = VertexType.REGULAR_RIGHT
                 else:   
-                    print("hier moet ik nog tussen start  en split checken ")
+                    if not right ^ going_right:
+                        current_vertex.type = VertexType.START
+                    else:
+                        current_vertex.type = VertexType.SPLIT
             else:
                 next_up = True
                 if up:
@@ -416,7 +424,10 @@ class DCEL:
                     else: 
                         current_vertex.type = VertexType.REGULAR_LEFT
                 else:
-                    print("hier moet ik nog tussen end  en merge checken ")
+                    if not right ^ going_right:
+                        current_vertex.type = VertexType.MERGE
+                    else:
+                        current_vertex.type = VertexType.END
             current_edge = next_edge
             current_vertex = next_vertex
             up = next_up
