@@ -101,6 +101,7 @@ class DCEL:
         
         self.faces.append(interior_face)
         self.faces.append(boundary_outer_face)
+        self.compute_vertex_types()
 
 
     def edge_angle(self, v1: Vertex, v2: Vertex):
@@ -409,17 +410,17 @@ class DCEL:
         # cycle trough all the edges of the face and their respective origins 
         current_edge = v_max.incident_half_edge.next
         current_vertex = current_edge.origin
-        if v_max.x < current_vertex.x:
-            right = True
+        if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
+            right = True,
         else:
             right = False
         while current_vertex != v_max:
             next_edge = current_edge.next
             next_vertex = next_edge.origin
-            if current_vertex.x >= next_vertex.x:
-                going_right = False
-            else:
+            if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
                 going_right = True
+            else:
+                going_right = False
 
             if current_vertex.y >= next_vertex.y:
                 next_up = False
