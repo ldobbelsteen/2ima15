@@ -149,7 +149,6 @@ class DCEL:
         """
         Inserts an edge between v1 and v2, v1 and v2 should be vertices in self.vertices.
         """
-
         # Find the outgoing half edge of v1 that comes after the new edge in counter-clockwise order
         v1_edge_incident_to_f = v1.incident_half_edge
         while not self.in_between(v1, v2, v1_edge_incident_to_f):
@@ -398,71 +397,96 @@ class DCEL:
     
 
     def compute_vertex_types(self):
-        # Find the topmost vertex (if there are multiple such vertices we take the first)
-        v_max = self.vertices[0]
-        for v in self.vertices:
-            if v_max.y < v.y:
-                v_max = v
-        # we start at the top of the outer boundery where the topmost vertex is always located
-        # we will always move downwards for the first edge 
-        v_max.type = VertexType.START
-        up = False
-        # cycle trough all the edges of the face and their respective origins 
-        current_edge = v_max.incident_half_edge.next
-        current_vertex = current_edge.origin
-        if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
-            right = True,
-        else:
-            right = False
-        while current_vertex != v_max:
-            next_edge = current_edge.next
-            next_vertex = next_edge.origin
+        def compute_vertex_types_of_boundary(vertex: Vertex, hole):
+            # Find the topmost vertex (if there are multiple such vertices we take the first)
+            v_max = vertex
+            v = vertex.incident_half_edge.twin.origin
+            while v != vertex:
+                if v_max.y < v.y:
+                    v_max = v
+                v = v.incident_half_edge.twin.origin
+            # we start at the top of the outer boundary where the topmost vertex is always located
+            # we will always move downwards for the first edge
+            if not hole:
+                v_max.type = VertexType.START
+            else:
+                v_max.type = VertexType.SPLIT
+            up = False
+            # cycle trough all the edges of the face and their respective origins 
+            current_edge = v_max.incident_half_edge.next
+            current_vertex = current_edge.origin
             if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
-                going_right = True
+                right = True,
             else:
-                going_right = False
-
-            if current_vertex.y >= next_vertex.y:
-                next_up = False
-                if not up:
-                    #if we go clockwise going down means P is to our left 
-                    if right :
-                        current_vertex.type = VertexType.REGULAR_LEFT
-                    else: 
-                        current_vertex.type = VertexType.REGULAR_RIGHT
-                else:   
-                    if right == going_right:
-                        current_vertex.type = VertexType.START
-                    else:
-                        current_vertex.type = VertexType.SPLIT
-            else:
-                next_up = True
-                if up:
-                    if right:
-                        current_vertex.type = VertexType.REGULAR_RIGHT
-                    else: 
-                        current_vertex.type = VertexType.REGULAR_LEFT
+                right = False
+            while current_vertex != v_max:
+                next_edge = current_edge.next
+                next_vertex = next_edge.origin
+                if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
+                    going_right = True
                 else:
-                    if right == going_right:
-                        current_vertex.type = VertexType.MERGE
+                    going_right = False
+
+                if current_vertex.y >= next_vertex.y:
+                    next_up = False
+                    if not up:
+                        #if we go clockwise going down means P is to our left 
+                        if right :
+                            if not hole:
+                                current_vertex.type = VertexType.REGULAR_LEFT
+                            else:
+                                VertexType.REGULAR_RIGHT
+                        else: 
+                            if not hole:
+                                current_vertex.type = VertexType.REGULAR_RIGHT
+                            else:
+                                VertexType.REGULAR_LEFT
+                    else:   
+                        if right == going_right:
+                            if not hole:
+                                current_vertex.type = VertexType.START
+                            else:
+                                current_vertex.type = VertexType.SPLIT
+                        else:
+                            if not hole:
+                                current_vertex.type = VertexType.SPLIT
+                            else:
+                                current_vertex.type = VertexType.START
+                else:
+                    next_up = True
+                    if up:
+                        if right:
+                            if not hole:
+                                current_vertex.type = VertexType.REGULAR_RIGHT
+                            else:
+                                current_vertex.type = VertexType.REGULAR_LEFT
+                        else:
+                            if not hole: 
+                                current_vertex.type = VertexType.REGULAR_LEFT
+                            else:
+                                current_vertex.type = VertexType.REGULAR_RIGHT
                     else:
-                        current_vertex.type = VertexType.END
-            current_edge = next_edge
-            current_vertex = next_vertex
-            up = next_up
-            
+                        if right == going_right:
+                            if not hole:
+                                current_vertex.type = VertexType.MERGE
+                            else:
+                                current_vertex.type = VertexType.END
+                        else:
+                            if not hole:
+                                current_vertex.type = VertexType.END
+                            else:
+                                current_vertex.type = VertexType.MERGE
 
-                
+                current_edge = next_edge
+                current_vertex = next_vertex
+                up = next_up
 
-
-
-        
-
-
-
-            
-
-
+        # Do the same for the holes
+        for f in self.faces:
+            if f.type == FaceType.INTERIOR:
+                compute_vertex_types_of_boundary(f.outer_component.origin, hole=False)
+            if f.type == FaceType.DISCONNECTED_HOLE:
+                compute_vertex_types_of_boundary(f.outer_component.origin, hole=True)
 
 # For testing purposes:
 if __name__ == "__main__":
