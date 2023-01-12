@@ -382,7 +382,7 @@ class DCEL:
         # Find the topmost vertex (if there are multiple such vertices we take the first)
         v_max = self.vertices[0]
         for v in self.vertices:
-            if v_max.y > v.y:
+            if v_max.y < v.y:
                 v_max = v
         # we start at the top of the outer boundery where the topmost vertex is always located
         # we will always move downwards for the first edge 
@@ -412,7 +412,7 @@ class DCEL:
                     else: 
                         current_vertex.type = VertexType.REGULAR_RIGHT
                 else:   
-                    if not right ^ going_right:
+                    if right == going_right:
                         current_vertex.type = VertexType.START
                     else:
                         current_vertex.type = VertexType.SPLIT
@@ -424,7 +424,7 @@ class DCEL:
                     else: 
                         current_vertex.type = VertexType.REGULAR_LEFT
                 else:
-                    if not right ^ going_right:
+                    if right == going_right:
                         current_vertex.type = VertexType.MERGE
                     else:
                         current_vertex.type = VertexType.END
