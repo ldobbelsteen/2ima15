@@ -28,8 +28,14 @@ class Rationals:
     def __mul__(self, other):
         return Rationals(self.num * other.num, self.den * other.den)
     
-    def __add__(self,other):
+    def __truediv__(self, other):
+        return Rationals(self.num * other.den, self.den * other.num)
+    
+    def __add__(self, other):
         return Rationals(self.num * other.den + other.num * self.den, self.den * other.den)
+    
+    def __sub__(self, other):
+        return Rationals(self.num * other.den - other.num * self.den, self.den * other.den)
 
     __rmul__ = __mul__
 
