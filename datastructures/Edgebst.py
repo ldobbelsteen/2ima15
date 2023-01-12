@@ -19,7 +19,7 @@ class EdgebstNode:
         self.right = None
         self.val = val
 
-    def insert(self, val,y):
+    def insert(self, val, y):
         if not self.val:
             self.val = val
             return
@@ -29,13 +29,13 @@ class EdgebstNode:
 
         if edgeSmaller(val, self.val, y):
             if self.left:
-                self.left.insert(val)
+                self.left.insert(val, y)
                 return
             self.left = EdgebstNode(val)
             return
 
         if self.right:
-            self.right.insert(val)
+            self.right.insert(val, y)
             return
         self.right = EdgebstNode(val)
 
@@ -44,11 +44,11 @@ class EdgebstNode:
             return self
         if edgeSmaller(val,self.val, y):
             if self.left:
-                self.left = self.left.delete(val)
+                self.left = self.left.delete(val, y)
             return self
-        if not edgeSmaller(val,self.val, y) and val != self.val:
+        if not edgeSmaller(val,self.val, y) and val != self.val and val != self.val.twin: # TSET
             if self.right:
-                self.right = self.right.delete(val)
+                self.right = self.right.delete(val, y)
             return self
         if self.right == None:
             return self.left
@@ -58,12 +58,12 @@ class EdgebstNode:
         while min_larger_node.left:
             min_larger_node = min_larger_node.left
         self.val = min_larger_node.val
-        self.right = self.right.delete(min_larger_node.val)
+        self.right = self.right.delete(min_larger_node.val, y)
         return self
     
     def leftEdgeFinder(self, vertex):
         if leftOfVertex(self.val, vertex):
-            if leftOfVertex(self.right,vertex):
+            if leftOfVertex(self.right, vertex): # TODO: ITS POSSIBLE TO NOT HAVE A RIGHT NEIGHBOUR
                 return self.leftEdgeFinder(self.right, vertex)
             else:
                 return self.val
