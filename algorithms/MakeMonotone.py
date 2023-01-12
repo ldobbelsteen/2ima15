@@ -39,9 +39,9 @@ def makeMonotone(dcel: DCEL):
         if vertex.type == VertexType.REGULAR_RIGHT:
             # if vertex.incident_half_edge.twin.origin.y >= vertex.y:
             #     upperEdge = vertex.incident_half_edge
-            #     lowerEdge = vertex.incident_half_edge.twin
+            #     lowerEdge = vertex.incident_half_edge.prev
             # else:
-            #     upperEdge = vertex.incident_half_edge.twin
+            #     upperEdge = vertex.incident_half_edge.prev
             #     lowerEdge = vertex.incident_half_edge
             upperEdge = vertex.incident_half_edge.prev
             lowerEdge = vertex.incident_half_edge
@@ -61,7 +61,7 @@ def makeMonotone(dcel: DCEL):
     status = EdgebstNode()
     while len(vertices) != 0:
         vertex = vertices.pop()
-        print(vertex.x, vertex.y)
+        print(vertex.type)
         handleVertex(vertex)
     return dcel 
 

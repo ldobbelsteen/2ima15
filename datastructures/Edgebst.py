@@ -63,7 +63,7 @@ class EdgebstNode:
     
     def leftEdgeFinder(self, vertex):
         if leftOfVertex(self.val, vertex):
-            if leftOfVertex(self.right, vertex): # TODO: ITS POSSIBLE TO NOT HAVE A RIGHT NEIGHBOUR
+            if self.right and leftOfVertex(self.right, vertex):
                 return self.leftEdgeFinder(self.right, vertex)
             else:
                 return self.val
