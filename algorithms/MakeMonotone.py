@@ -8,13 +8,13 @@ def makeMonotone(dcel: DCEL):
     def handleVertex(vertex: Vertex):
         if vertex.type == VertexType.START:
             # we state the left edge is the incident edge because of the counter clock wise rotation.
-            status.insert(vertex.incident_half_edge,vertex.y)
+            status.insert(vertex.incident_half_edge, vertex.y)
             vertex.incident_half_edge.helper = vertex
             vertex.incident_half_edge.twin.helper = vertex
         if vertex.type == VertexType.END:
              # we state the left edge is the prev of incident edge because of the counter clock wise rotation.
             edge = vertex.incident_half_edge.prev
-            if edge.helper.type == VertexType.MERGE:
+            if edge.helper and edge.helper.type == VertexType.MERGE: # TODO: idk if this is correct
                 dcel.insert_edge(edge.helper, vertex)
             status.delete(edge,vertex.y)
         if vertex.type == VertexType.SPLIT:
@@ -28,11 +28,11 @@ def makeMonotone(dcel: DCEL):
             rightEdge.twin.helper = vertex
         if vertex.type == VertexType.MERGE:
             rightEdge = vertex.incident_half_edge.prev
-            if rightEdge.helper.type == VertexType.MERGE:
+            if rightEdge.helper and rightEdge.helper.type == VertexType.MERGE: #TODO: idk if this is correct
                 dcel.insert_edge(rightEdge.helper, vertex)
             status.delete(rightEdge, vertex.y)
             edgePrime = status.leftEdgeFinder(vertex)
-            if edgePrime.helper.type == VertexType.MERGE:
+            if edgePrime.helper and edgePrime.helper.type == VertexType.MERGE: #TODO: idk if this is correct
                 dcel.insert_edge(edgePrime.helper, vertex)
             edgePrime.helper = vertex
             edgePrime.twin.helper = vertex
@@ -45,14 +45,14 @@ def makeMonotone(dcel: DCEL):
             #     lowerEdge = vertex.incident_half_edge
             upperEdge = vertex.incident_half_edge.prev
             lowerEdge = vertex.incident_half_edge
-            if upperEdge.helper.type == VertexType.MERGE:
+            if upperEdge.helper and upperEdge.helper.type == VertexType.MERGE: #TODO: idk if this is correct
                 dcel.insert_edge(upperEdge.helper, vertex)
             status.delete(upperEdge,vertex.y)
             status.insert(lowerEdge,vertex.y)
             lowerEdge.helper = vertex
         if vertex.type == VertexType.REGULAR_LEFT:
             edge = status.leftEdgeFinder(vertex)
-            if edge.helper.type == VertexType.MERGE:
+            if edge.helper and edge.helper.type == VertexType.MERGE: #TODO: idk if this is correct
                 dcel.insert_edge(edge.helper, vertex)
             edge.helper = vertex  
 
@@ -61,7 +61,6 @@ def makeMonotone(dcel: DCEL):
     status = EdgebstNode()
     while len(vertices) != 0:
         vertex = vertices.pop()
-        print(vertex.type)
         handleVertex(vertex)
     return dcel 
 
