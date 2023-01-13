@@ -61,6 +61,7 @@ def makeMonotone(dcel: DCEL):
     status = EdgebstNode()
     while len(vertices) != 0:
         vertex = vertices.pop()
+        print("Now handling: " + str(vertex.type))
         handleVertex(vertex)
     return dcel 
 

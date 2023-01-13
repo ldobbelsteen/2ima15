@@ -4,9 +4,17 @@ def slope(edge):
     return rat(edge.twin.origin.y - edge.origin.y, edge.twin.origin.x - edge.origin.x)
 
 def xOfEdge(edge, y):
-    b = rat(edge.origin.y) - slope(edge) * rat(edge.origin.x)
-    xEdge = (rat(y) - b) / slope(edge)
-    return xEdge
+    # If edge is vertical:
+    if edge.origin.x == edge.twin.origin.x:
+        return rat(edge.origin.x)
+    # Edge is horizontal:
+    elif edge.origin.y == edge.twin.origin.y:
+    # Edge is not horizontal nor vertical:
+        return rat(max(edge.origin.x, edge.twin.origin.x)) # TODO: I don't know if this is correct
+    else:
+        b = rat(edge.origin.y) - slope(edge) * rat(edge.origin.x)
+        xEdge = (rat(y) - b) / slope(edge)
+        return xEdge
 
 def edgeSmaller(edge1,edge2,y):
     xEdge1 = xOfEdge(edge1, y)
@@ -68,7 +76,7 @@ class EdgebstNode:
     def leftEdgeFinder(self, vertex):
         if leftOfVertex(self.val, vertex):
             if self.right and leftOfVertex(self.right.val, vertex):
-                return self.leftEdgeFinder(self.right, vertex)
+                return self.right.leftEdgeFinder(vertex)
             else:
                 return self.val
         else:

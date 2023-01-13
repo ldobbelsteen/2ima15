@@ -149,6 +149,7 @@ class DCEL:
         """
         Inserts an edge between v1 and v2, v1 and v2 should be vertices in self.vertices.
         """
+        print("Inserting between: (" + str(v1.x) + "," + str(v1.y) + ") and (" + str(v2.x) + "," + str(v2.y) + ")")
         # Find the outgoing half edge of v1 that comes after the new edge in counter-clockwise order
         v1_edge_incident_to_f = v1.incident_half_edge
         while not self.in_between(v1, v2, v1_edge_incident_to_f):
@@ -435,12 +436,12 @@ class DCEL:
                             if not hole:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                             else:
-                                VertexType.REGULAR_RIGHT
+                                current_vertex.type = VertexType.REGULAR_RIGHT
                         else: 
                             if not hole:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
                             else:
-                                VertexType.REGULAR_LEFT
+                                current_vertex.type = VertexType.REGULAR_LEFT
                     else:   
                         if right == going_right:
                             if not hole:
