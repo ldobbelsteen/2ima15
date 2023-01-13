@@ -399,11 +399,11 @@ class DCEL:
 
     def compute_vertex_types(self):
         def compute_vertex_types_of_boundary(vertex: Vertex, hole):
-            # Find the topmost vertex (if there are multiple such vertices we take the first)
+            # Find the topmost leftmost vertex
             v_max = vertex
             v = vertex.incident_half_edge.twin.origin
             while v != vertex:
-                if v_max.y < v.y:
+                if v_max.y <= v.y and (v_max.y != v.y or v_max.x > v.x):
                     v_max = v
                 v = v.incident_half_edge.twin.origin
             # we start at the top of the outer boundary where the topmost vertex is always located
@@ -413,7 +413,7 @@ class DCEL:
             else:
                 v_max.type = VertexType.SPLIT
             up = False
-            # cycle trough all the edges of the face and their respective origins 
+            # cycle trough all the edges of the face and their respective origins
             current_edge = v_max.incident_half_edge.next
             current_vertex = current_edge.origin
             if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
@@ -428,11 +428,11 @@ class DCEL:
                 else:
                     going_right = False
 
-                if current_vertex.y >= next_vertex.y:
+                if current_vertex.y > next_vertex.y or (current_vertex.y == next_vertex.y and next_vertex.x > current_vertex.x):
                     next_up = False
                     if not up:
                         #if we go clockwise going down means P is to our left 
-                        if right :
+                        if right:
                             if not hole:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                             else:
