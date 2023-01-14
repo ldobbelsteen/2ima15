@@ -70,11 +70,13 @@ def makeMonotone(dcel: DCEL):
         return status
 
     vertices = dcel.vertices 
-    vertices.sort(key=lambda coordinate: (coordinate.y, coordinate.x), reverse=True)
+    vertices.sort(key=lambda coordinate: (-coordinate.y, coordinate.x))
     status = EdgebstNode()
     for i in range(len(vertices)):
         vertex = vertices[i]
+        #print(f"Now handling: {vertex.type}")
         status = handleVertex(vertex, status)
+        #status.print_nodes()
     return dcel 
 
 
