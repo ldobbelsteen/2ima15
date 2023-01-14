@@ -76,7 +76,7 @@ class EdgebstNode:
     def print_nodes(self):
         if not self.val:
             return
-        print(f"({self.val.origin.x}, {self.val.origin.y}), ({self.val.twin.origin.x}, {self.val.twin.origin.y})")
+        print(f"(({self.val.origin.x}, {self.val.origin.y}), ({self.val.twin.origin.x}, {self.val.twin.origin.y}))")
         if self.left:
             self.left.print_nodes()
         if self.right:
