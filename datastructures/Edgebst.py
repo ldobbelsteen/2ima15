@@ -36,7 +36,7 @@ class EdgebstNode:
             self.val = val
             return
 
-        if self.val == val:
+        if self.val == val or self.val == self.val.twin:
             return
 
         if edgeSmaller(val, self.val, y):
@@ -58,7 +58,7 @@ class EdgebstNode:
             if self.left:
                 self.left = self.left.delete(val, y)
             return self
-        if not edgeSmaller(val,self.val, y) and val != self.val and val != self.val.twin: # TSET
+        if not edgeSmaller(val,self.val, y) and val != self.val and val != self.val.twin:
             if self.right:
                 self.right = self.right.delete(val, y)
             return self
@@ -72,6 +72,23 @@ class EdgebstNode:
         self.val = min_larger_node.val
         self.right = self.right.delete(min_larger_node.val, y)
         return self
+    
+    def print_nodes(self):
+        if not self.val:
+            return
+        print(f"({self.val.origin.x}, {self.val.origin.y}), ({self.val.twin.origin.x}, {self.val.twin.origin.y})")
+        if self.left:
+            self.left.print_nodes()
+        if self.right:
+            self.right.print_nodes()
+    
+    def node_count(self):
+        count = 0
+        if self.left:
+            count += self.left.node_count()
+        if self.right:
+            count += self.right.node_count()
+        return count
     
     def leftEdgeFinder(self, vertex):
         if leftOfVertex(self.val, vertex):

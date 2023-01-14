@@ -4,8 +4,7 @@ from datastructures.Rationals import Rationals as rat
 class FaceType(Enum):
     OUTER = 0
     INTERIOR = 1
-    CONNECTED_HOLE = 2
-    DISCONNECTED_HOLE = 3
+    HOLE = 2
 
 class VertexType(Enum):
     START = 0
@@ -45,6 +44,8 @@ class HalfEdge:
         self.incident_face = None
         self.next = None
         self.prev = None
+        # Used for computing faces after insertions
+        self.marked = False
         # Required for algorithm
         self.helper = None
 
@@ -52,7 +53,6 @@ class HalfEdge:
 class Face:
     def __init__(self):
         self.outer_component = None
-        #self.inner_components = []
         self.type = None
 
 
@@ -95,7 +95,7 @@ class DCEL:
         # Initialize vertices and edge on hole boundaries:
         for hole_boundary in holes:
             hole_outer_face = Face()
-            hole_outer_face.type = FaceType.DISCONNECTED_HOLE
+            hole_outer_face.type = FaceType.HOLE
             self.process_boundary(hole_boundary, interior_face, hole_outer_face)
             self.faces.append(hole_outer_face)
         
@@ -149,17 +149,19 @@ class DCEL:
         """
         Inserts an edge between v1 and v2, v1 and v2 should be vertices in self.vertices.
         """
-        print("Inserting between: (" + str(v1.x) + "," + str(v1.y) + ") and (" + str(v2.x) + "," + str(v2.y) + ")")
         # Find the outgoing half edge of v1 that comes after the new edge in counter-clockwise order
         v1_edge_incident_to_f = v1.incident_half_edge
         while not self.in_between(v1, v2, v1_edge_incident_to_f):
+            if v1_edge_incident_to_f.twin.origin.x == v2.x and v1_edge_incident_to_f.twin.origin.y == v2.y: #TODO: THIS HAPPENS IN CASE WE'RE INSERTING A DUPE.
+                print("Inserting Duplicate edge!")
+                return
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
 
         f = v1_edge_incident_to_f.incident_face
 
         # Find the outgoing half edge of v2 that comes after the new edge in counter-clockwise order
         v2_edge_incident_to_f = v2.incident_half_edge
-        while v2_edge_incident_to_f.incident_face != f:
+        while not self.in_between(v2, v1, v2_edge_incident_to_f):
             v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
 
         h1 = HalfEdge(v1)
@@ -177,37 +179,25 @@ class DCEL:
         v2_edge_incident_to_f.prev.next = h2
         v1_edge_incident_to_f.prev = h2
         v2_edge_incident_to_f.prev = h1
-
-        # In the case where the inserted edge connects a not yet connected hole boundary to 
-        # the graph connected to the outer boundary we do not need to alter any faces
-        if (v1_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
-            v1_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
-        elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
-            v2_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
-        else:
-            # Split the intersected face into two new faces
-            f1 = Face()
-            f1.type = FaceType.INTERIOR
-            f1.outer_component = h1
-            edge = h1
-            h1.incident_face = f1
-            edge = edge.next
-            while edge != h1:
-                edge.incident_face = f1
-                edge = edge.next
-            f2 = Face()
-            f2.type = FaceType.INTERIOR
-            f2.outer_component = h2
-            edge = h2
-            h2.incident_face = f2
-            edge = edge.next
-            while edge != h2:
-                edge.incident_face = f2
-                edge = edge.next
-            self.faces.remove(f)
-            self.faces.append(f1)
-            self.faces.append(f2)
     
+
+    def recompute_faces(self):
+        new_faces = []
+        for e in self.half_edges:
+            if not e.marked:
+                f = Face()
+                # Even though a face might be subdivided it does not change type
+                f.type = e.incident_face.type
+                f.outer_component = e
+                new_faces.append(f)
+                while not e.marked:
+                    e.incident_face = f
+                    e.marked = True
+                    e = e.next
+        # Undo the marking for later computations
+        for e in self.half_edges:
+            e.marked = False
+        self.faces = new_faces
 
     def insert_edge_with_face(self, v1: Vertex, v2: Vertex, f: Face):
         """
@@ -242,10 +232,10 @@ class DCEL:
 
         # In the case where the inserted edge connects a not yet connected hole boundary to 
         # the graph connected to the outer boundary we do not need to alter any faces
-        if (v1_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
-            v1_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
-        elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.DISCONNECTED_HOLE):
-            v2_edge_incident_to_f.twin.incident_face.type = FaceType.CONNECTED_HOLE
+        if (v1_edge_incident_to_f.twin.incident_face.type == FaceType.HOLE):
+            v1_edge_incident_to_f.twin.incident_face.type = FaceType.HOLE
+        elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.HOLE):
+            v2_edge_incident_to_f.twin.incident_face.type = FaceType.HOLE
         else:
             # Split the intersected face into two new faces
             f1 = Face()
@@ -412,6 +402,7 @@ class DCEL:
                 v_max.type = VertexType.START
             else:
                 v_max.type = VertexType.SPLIT
+
             up = False
             # cycle trough all the edges of the face and their respective origins
             current_edge = v_max.incident_half_edge.next
@@ -486,7 +477,7 @@ class DCEL:
         for f in self.faces:
             if f.type == FaceType.INTERIOR:
                 compute_vertex_types_of_boundary(f.outer_component.origin, hole=False)
-            if f.type == FaceType.DISCONNECTED_HOLE:
+            if f.type == FaceType.HOLE:
                 compute_vertex_types_of_boundary(f.outer_component.origin, hole=True)
 
 # For testing purposes:

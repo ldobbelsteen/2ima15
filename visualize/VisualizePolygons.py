@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw
 import json
 
 
-def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon_drawing"):
+def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon_drawing", lines=[], points=[]):
     """
     Visualizes the polygon, the format should be confrom the specification of the challenge:
     https://cgshop.ibr.cs.tu-bs.de/competition/cg-shop-2023/#instance-format
@@ -26,7 +26,8 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     outer_boundary_xy = [(p[0] - min_x, p[1] - min_y) for p in outer_boundary_xy]
     holes_xy = [[(p[0] - min_x, p[1] - min_y) for p in h] for h in holes_xy]
     solution_xy = [[(p[0] - min_x, p[1] - min_y) for p in h] for h in solution_xy]
-
+    lines = [[(p[0] - min_x, p[1] - min_y) for p in l] for l in lines]
+    points = [(p[0] - min_x, p[1] - min_y) for p in points]
     # Set width and height to width and height of polygon
     width = (max_x - min_x) * resolution
     height = (max_y - min_y) * resolution
@@ -35,6 +36,8 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     outer_boundary_xy = [(p[0]*resolution, height - p[1]*resolution) for p in outer_boundary_xy]
     holes_xy = [[(p[0]*resolution, height - p[1]*resolution) for p in h] for h in holes_xy]
     solution_xy = [[(p[0]*resolution, height - p[1]*resolution) for p in h] for h in solution_xy]
+    lines = [[(p[0]*resolution, height - p[1]*resolution) for p in l] for l in lines]
+    points = [(p[0]*resolution, height - p[1]*resolution) for p in points]
 
     # Draw polygons                                                   
     img = Image.new("RGB", size, "white") 
@@ -47,6 +50,10 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     img1.polygon(outer_boundary_xy, fill=None, outline="blue")
     for h_xy in holes_xy:
         img1.polygon(h_xy, fill=None, outline="blue")
+    for line in lines:
+        img1.line(line, fill="green", width=resolution)
+    for p in points:
+        img1.ellipse([(p[0]-resolution, p[1]-resolution), (p[0]+resolution, p[1]+resolution)], fill="black")
     img.save(name + ".png")
 
 
