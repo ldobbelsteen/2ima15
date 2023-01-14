@@ -153,7 +153,7 @@ class DCEL:
         v1_edge_incident_to_f = v1.incident_half_edge
         while not self.in_between(v1, v2, v1_edge_incident_to_f):
             if v1_edge_incident_to_f.twin.origin.x == v2.x and v1_edge_incident_to_f.twin.origin.y == v2.y: #TODO: THIS HAPPENS IN CASE WE'RE INSERTING A DUPE.
-                print("Inserting Duplicate edge!")
+                print(f"Inserting Duplicate edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
                 return
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
 
@@ -409,7 +409,7 @@ class DCEL:
             else:
                 v_max.type = VertexType.SPLIT
 
-            left_of_polygon = True
+            left_of_polygon = not hole
             up = False
 
             # cycle trough all the edges of the face and their respective origins
@@ -465,7 +465,7 @@ class DCEL:
                     # direction changed from down to up
                     else:
                         up = True
-                        if left_of_polygon == (self.leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
+                        if left_of_polygon == (self.leftmost_edge(current_edge, current_edge.prev.twin, up) != current_edge):
                             if not hole:
                                 current_vertex.type = VertexType.END
                             else:
