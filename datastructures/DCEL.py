@@ -369,22 +369,28 @@ class DCEL:
             outer_face.outer_component = h1
 
     
-    def leftmost_edge(self, e1, e2):
+    def leftmost_edge(self, e1, e2, up):
         """
         Returns the leftmost_edge given two adjacent edges that both point upwards or both point downwards.
         """
         angle_e1 = self.edge_angle(e1.origin, e1.twin.origin)
         angle_e2 = self.edge_angle(e2.origin, e2.twin.origin)
-        if angle_e1[0] >= 2 and  angle_e2[0] >= 2 or angle_e1[0] < 2 and  angle_e2[0] < 2:
-            if angle_e1 < angle_e2:
+        if up:
+            if angle_e1 > angle_e2:
                 return e1
             else:
                 return e2
         else:
-            if angle_e1 < angle_e2:
-                return e2
+            if angle_e1[0] == 0 and angle_e2[0] == 0 or angle_e1[0] >= 2 and angle_e2[0] >= 2:
+                if angle_e1 > angle_e2:
+                    return e2
+                else:
+                    return e1
             else:
-                return e1
+                if angle_e1 > angle_e2:
+                    return e1
+                else:
+                    return e2
     
 
     def compute_vertex_types(self):
@@ -397,81 +403,83 @@ class DCEL:
                     v_max = v
                 v = v.incident_half_edge.twin.origin
             # we start at the top of the outer boundary where the topmost vertex is always located
-            # we will always move downwards for the first edge
+            # we will always move downwards to the left for the first edge
             if not hole:
                 v_max.type = VertexType.START
             else:
                 v_max.type = VertexType.SPLIT
 
+            left_of_polygon = True
             up = False
+
             # cycle trough all the edges of the face and their respective origins
             current_edge = v_max.incident_half_edge.next
             current_vertex = current_edge.origin
-            if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
-                right = True,
-            else:
-                right = False
             while current_vertex != v_max:
                 next_edge = current_edge.next
                 next_vertex = next_edge.origin
-                if self.leftmost_edge(current_edge.prev.twin, current_edge) == current_edge.prev.twin:
-                    going_right = True
-                else:
-                    going_right = False
 
+                # current_edge is going down
                 if current_vertex.y > next_vertex.y or (current_vertex.y == next_vertex.y and next_vertex.x > current_vertex.x):
-                    next_up = False
+                    # previous edge was also going down, direction did not change
                     if not up:
-                        #if we go clockwise going down means P is to our left 
-                        if right:
-                            if not hole:
-                                current_vertex.type = VertexType.REGULAR_LEFT
-                            else:
-                                current_vertex.type = VertexType.REGULAR_RIGHT
-                        else: 
+                        if left_of_polygon:
                             if not hole:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
-                            else:
-                                current_vertex.type = VertexType.REGULAR_LEFT
-                    else:   
-                        if right == going_right:
-                            if not hole:
-                                current_vertex.type = VertexType.START
-                            else:
-                                current_vertex.type = VertexType.SPLIT
-                        else:
-                            if not hole:
-                                current_vertex.type = VertexType.SPLIT
-                            else:
-                                current_vertex.type = VertexType.START
-                else:
-                    next_up = True
-                    if up:
-                        if right:
-                            if not hole:
-                                current_vertex.type = VertexType.REGULAR_RIGHT
-                            else:
+                            else: 
                                 current_vertex.type = VertexType.REGULAR_LEFT
                         else:
-                            if not hole: 
+                            if not hole:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                             else:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
+                    # direction changed from up to down
                     else:
-                        if right == going_right:
+                        up = False
+                        if left_of_polygon == (self.leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
                             if not hole:
-                                current_vertex.type = VertexType.MERGE
+                                current_vertex.type = VertexType.START
                             else:
-                                current_vertex.type = VertexType.END
+                                current_vertex.type = VertexType.SPLIT
                         else:
                             if not hole:
+                                current_vertex.type = VertexType.SPLIT
+                            else:
+                                current_vertex.type = VertexType.START
+                        left_of_polygon = not left_of_polygon
+
+                # current_edge is going up
+                else:
+                    # previous edge was also going up, direction did not change
+                    if up:
+                        if left_of_polygon:
+                            if not hole:
+                                current_vertex.type = VertexType.REGULAR_RIGHT
+                            else: 
+                                current_vertex.type = VertexType.REGULAR_LEFT
+                        else:
+                            if not hole:
+                                current_vertex.type = VertexType.REGULAR_LEFT
+                            else:
+                                current_vertex.type = VertexType.REGULAR_RIGHT
+                    # direction changed from down to up
+                    else:
+                        up = True
+                        if left_of_polygon == (self.leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
+                            if not hole:
                                 current_vertex.type = VertexType.END
                             else:
                                 current_vertex.type = VertexType.MERGE
+                        else:
+                            if not hole:
+                                current_vertex.type = VertexType.MERGE
+                            else:
+                                current_vertex.type = VertexType.END
+                        left_of_polygon = not left_of_polygon
 
+                # Move on to the next vertex
                 current_edge = next_edge
                 current_vertex = next_vertex
-                up = next_up
 
         # Do the same for the holes
         for f in self.faces:
