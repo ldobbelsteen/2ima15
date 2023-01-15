@@ -178,67 +178,6 @@ class DCEL:
             e.marked = False
         self.faces = new_faces
 
-    def insert_edge_with_face(self, v1: Vertex, v2: Vertex, f: Face):
-        """
-        [DEPRECATED]
-        Inserts an edge between v1 and v2 through face f, 
-        v1 and v2 should be vertices in self.vertices and f should be a face in self.faces.
-        """
-
-        v1_edge_incident_to_f = v1.incident_half_edge
-        while v1_edge_incident_to_f.incident_face != f:
-            v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
-
-        v2_edge_incident_to_f = v2.incident_half_edge
-        while v2_edge_incident_to_f.incident_face != f:
-            v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
-
-        h1 = HalfEdge(v1)
-        h2 = HalfEdge(v2)
-
-        h1.twin = h2
-        h2.twin = h1
-
-        h1.next = v2_edge_incident_to_f
-        h1.prev = v1_edge_incident_to_f.prev
-        h2.next = v1_edge_incident_to_f
-        h2.prev = v2_edge_incident_to_f.prev
-
-        v1_edge_incident_to_f.prev.next = h1
-        v2_edge_incident_to_f.prev.next = h2
-        v1_edge_incident_to_f.prev = h2
-        v2_edge_incident_to_f.prev = h1
-
-        # In the case where the inserted edge connects a not yet connected hole boundary to 
-        # the graph connected to the outer boundary we do not need to alter any faces
-        if (v1_edge_incident_to_f.twin.incident_face.type == FaceType.HOLE):
-            v1_edge_incident_to_f.twin.incident_face.type = FaceType.HOLE
-        elif (v2_edge_incident_to_f.twin.incident_face.type == FaceType.HOLE):
-            v2_edge_incident_to_f.twin.incident_face.type = FaceType.HOLE
-        else:
-            # Split the intersected face into two new faces
-            f1 = Face()
-            f1.type = FaceType.INTERIOR
-            f1.outer_component = h1
-            edge = h1
-            h1.incident_face = f1
-            edge = edge.next
-            while edge != h1:
-                edge.incident_face = f1
-                edge = edge.next
-            f2 = Face()
-            f2.type = FaceType.INTERIOR
-            f2.outer_component = h2
-            edge = h2
-            h2.incident_face = f2
-            edge = edge.next
-            while edge != h2:
-                edge.incident_face = f2
-                edge = edge.next
-            self.faces.remove(f)
-            self.faces.append(f1)
-            self.faces.append(f2)
-
 
     def delete_edge(self, e: HalfEdge):
         """
