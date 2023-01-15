@@ -320,26 +320,27 @@ class DCEL:
                         if left_of_polygon:
                             if not hole:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
-                            else: 
+                            else:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                         else:
-                            if not hole:
+                            if not hole: 
                                 current_vertex.type = VertexType.REGULAR_LEFT
                             else:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
+
                     # direction changed from up to down
                     else:
                         up = False
                         if left_of_polygon == (leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
                             if not hole:
-                                current_vertex.type = VertexType.START
-                            else:
                                 current_vertex.type = VertexType.SPLIT
+                            else:
+                                current_vertex.type = VertexType.START
                         else:
                             if not hole:
-                                current_vertex.type = VertexType.SPLIT
-                            else:
                                 current_vertex.type = VertexType.START
+                            else:
+                                current_vertex.type = VertexType.SPLIT
                         left_of_polygon = not left_of_polygon
 
                 # current_edge is going up
@@ -349,7 +350,7 @@ class DCEL:
                         if left_of_polygon:
                             if not hole:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
-                            else: 
+                            else:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                         else:
                             if not hole:
@@ -359,16 +360,16 @@ class DCEL:
                     # direction changed from down to up
                     else:
                         up = True
-                        if left_of_polygon == (leftmost_edge(current_edge, current_edge.prev.twin, up) != current_edge):
+                        if left_of_polygon == (leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
                             if not hole:
-                                current_vertex.type = VertexType.END
-                            else:
                                 current_vertex.type = VertexType.MERGE
+                            else:
+                                current_vertex.type = VertexType.END
                         else:
                             if not hole:
-                                current_vertex.type = VertexType.MERGE
-                            else:
                                 current_vertex.type = VertexType.END
+                            else:
+                                current_vertex.type = VertexType.MERGE
                         left_of_polygon = not left_of_polygon
 
                 # Move on to the next vertex
