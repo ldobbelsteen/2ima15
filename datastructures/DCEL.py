@@ -103,43 +103,22 @@ class DCEL:
         self.faces.append(boundary_outer_face)
         self.compute_vertex_types()
 
-
-    def edge_angle(self, v1: Vertex, v2: Vertex):
-            """
-            Returns a pair (a, b), where a is either 0, 1, 2, or 3, and b is the slope of the edge (v1, v2) (or None if the slope is (-)infinity).
-            a = 0 implies that (v1, v2) points to the right
-            a = 1 implies that (v1, v2) points upwards
-            a = 2 implies that (v1, v2) points to the left
-            a = 3 implies that (v1, v2) points downwards
-            """
-            # Edge points to the right
-            if v2.x-v1.x > 0:
-                return (0, rat(v2.y - v1.y, v2.x - v1.x))
-            # Edge points to the left
-            elif v2.x-v1.x < 0:
-                return (2, rat(v2.y - v1.y, v2.x - v1.x))
-            # Edge points vertically upwards
-            elif v2.y > v1.y:
-                return (1, None)
-            # Edge points vertically downwards
-            else:
-                return (3, None)
     
     def in_between(self, v1, v2, v1_incident_edge):
         """
         Checks whether the edge (v1, v2) falls in between v1_incident_edge and its prev
         """
-        if self.edge_angle(v1, v1_incident_edge.twin.origin) > self.edge_angle(v1, v1_incident_edge.prev.origin):
-            if (self.edge_angle(v1, v1_incident_edge.twin.origin) > self.edge_angle(v1, v2) and
-                self.edge_angle(v1, v1_incident_edge.prev.origin) < self.edge_angle(v1, v2)):
+        if edge_angle(v1, v1_incident_edge.twin.origin) > edge_angle(v1, v1_incident_edge.prev.origin):
+            if (edge_angle(v1, v1_incident_edge.twin.origin) > edge_angle(v1, v2) and
+                edge_angle(v1, v1_incident_edge.prev.origin) < edge_angle(v1, v2)):
                 return True
             else:
                 return False
         # The direction vertically downwards is included in the interval between v1_incident_edge
         # and its prev
         else:
-            if (self.edge_angle(v1, v1_incident_edge.twin.origin) > self.edge_angle(v1, v2) or
-                self.edge_angle(v1, v1_incident_edge.prev.origin) < self.edge_angle(v1, v2)):
+            if (edge_angle(v1, v1_incident_edge.twin.origin) > edge_angle(v1, v2) or
+                edge_angle(v1, v1_incident_edge.prev.origin) < edge_angle(v1, v2)):
                 return True
             else:
                 return False
@@ -367,30 +346,6 @@ class DCEL:
             inner_face.outer_component = h2
         else:
             outer_face.outer_component = h1
-
-    
-    def leftmost_edge(self, e1, e2, up):
-        """
-        Returns the leftmost_edge given two adjacent edges that both point upwards or both point downwards.
-        """
-        angle_e1 = self.edge_angle(e1.origin, e1.twin.origin)
-        angle_e2 = self.edge_angle(e2.origin, e2.twin.origin)
-        if up:
-            if angle_e1 > angle_e2:
-                return e1
-            else:
-                return e2
-        else:
-            if angle_e1[0] == 0 and angle_e2[0] == 0 or angle_e1[0] >= 2 and angle_e2[0] >= 2:
-                if angle_e1 > angle_e2:
-                    return e2
-                else:
-                    return e1
-            else:
-                if angle_e1 > angle_e2:
-                    return e1
-                else:
-                    return e2
     
 
     def compute_vertex_types(self):
@@ -436,7 +391,7 @@ class DCEL:
                     # direction changed from up to down
                     else:
                         up = False
-                        if left_of_polygon == (self.leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
+                        if left_of_polygon == (leftmost_edge(current_edge, current_edge.prev.twin, up) == current_edge):
                             if not hole:
                                 current_vertex.type = VertexType.START
                             else:
@@ -465,7 +420,7 @@ class DCEL:
                     # direction changed from down to up
                     else:
                         up = True
-                        if left_of_polygon == (self.leftmost_edge(current_edge, current_edge.prev.twin, up) != current_edge):
+                        if left_of_polygon == (leftmost_edge(current_edge, current_edge.prev.twin, up) != current_edge):
                             if not hole:
                                 current_vertex.type = VertexType.END
                             else:
@@ -487,6 +442,53 @@ class DCEL:
                 compute_vertex_types_of_boundary(f.outer_component.origin, hole=False)
             if f.type == FaceType.HOLE:
                 compute_vertex_types_of_boundary(f.outer_component.origin, hole=True)
+
+
+def edge_angle(v1: Vertex, v2: Vertex):
+            """
+            Returns a pair (a, b), where a is either 0, 1, 2, or 3, and b is the slope of the edge (v1, v2) (or None if the slope is (-)infinity).
+            a = 0 implies that (v1, v2) points to the right
+            a = 1 implies that (v1, v2) points upwards
+            a = 2 implies that (v1, v2) points to the left
+            a = 3 implies that (v1, v2) points downwards
+            """
+            # Edge points to the right
+            if v2.x-v1.x > 0:
+                return (0, rat(v2.y - v1.y, v2.x - v1.x))
+            # Edge points to the left
+            elif v2.x-v1.x < 0:
+                return (2, rat(v2.y - v1.y, v2.x - v1.x))
+            # Edge points vertically upwards
+            elif v2.y > v1.y:
+                return (1, None)
+            # Edge points vertically downwards
+            else:
+                return (3, None)
+
+
+def leftmost_edge(e1, e2, up):
+        """
+        Returns the leftmost_edge given two adjacent edges that both point upwards or both point downwards.
+        """
+        angle_e1 = edge_angle(e1.origin, e1.twin.origin)
+        angle_e2 = edge_angle(e2.origin, e2.twin.origin)
+        if up:
+            if angle_e1 > angle_e2:
+                return e1
+            else:
+                return e2
+        else:
+            if angle_e1[0] == 0 and angle_e2[0] == 0 or angle_e1[0] >= 2 and angle_e2[0] >= 2:
+                if angle_e1 > angle_e2:
+                    return e2
+                else:
+                    return e1
+            else:
+                if angle_e1 > angle_e2:
+                    return e1
+                else:
+                    return e2
+
 
 # For testing purposes:
 if __name__ == "__main__":
