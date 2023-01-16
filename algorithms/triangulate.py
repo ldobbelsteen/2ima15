@@ -1,4 +1,5 @@
-from datastructures.DCEL import DCEL, Vertex, Face, HalfEdge
+from datastructures.DCEL import DCEL, Vertex, HalfEdge
+from enum import Enum
 
 
 def triangulate_monotone_polygon(dcel: DCEL):
@@ -30,16 +31,18 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 while len(stack) > 0:
                     vertex = stack.pop()
                     if len(stack) > 0:
-                        print(f"Inserting edge1: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
+                        print(
+                            f"Inserting edge1: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
                         dcel.insert_edge(vertices[i][0], vertex[0])
                 stack.append(vertices[i - 1])
                 stack.append(vertices[i])
             else:
                 is_left_side = vertices[i][1]
                 vertex = stack.pop()
-                while len(stack) > 0 and ((not is_left_turn(vertices[i][0], vertex[0], stack[-1][0])) if is_left_side else is_left_turn(vertices[i][0], vertex[0], stack[-1][0])):
+                while len(stack) > 0 and ((get_direction(vertices[i][0], vertex[0], stack[-1][0])) == Direction.RIGHT if is_left_side else get_direction(vertices[i][0], vertex[0], stack[-1][0]) == Direction.LEFT):
                     vertex = stack.pop()
-                    print(f"Inserting edge2: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
+                    print(
+                        f"Inserting edge2: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
                     dcel.insert_edge(vertices[i][0], vertex[0])
                 stack.append(vertex)
                 stack.append(vertices[i])
@@ -49,7 +52,8 @@ def triangulate_monotone_polygon(dcel: DCEL):
         stack.pop()
         while len(stack) > 1:
             vertex = stack.pop()
-            print(f"Inserting edge3: (({vertices[-1][0].x}, {vertices[-1][0].y}), ({vertex[0].x}, {vertex[0].y}))")
+            print(
+                f"Inserting edge3: (({vertices[-1][0].x}, {vertices[-1][0].y}), ({vertex[0].x}, {vertex[0].y}))")
             dcel.insert_edge(vertices[-1][0], vertex[0])
 
     dcel.recompute_faces()
@@ -130,7 +134,13 @@ def merge_boundaries(left_boundary: list[Vertex], right_boundary: list[Vertex]) 
     return result
 
 
-def is_left_turn(first: Vertex, middle: Vertex, end: Vertex) -> bool:
+class Direction(Enum):
+    LEFT = 1
+    COLINEAR = 2
+    RIGHT = 3
+
+
+def get_direction(first: Vertex, middle: Vertex, end: Vertex) -> Direction:
     """
     Return whether three vertices form a left turn or a right turn. True
     is returned when they form a left turn and false when they form a right
@@ -144,4 +154,9 @@ def is_left_turn(first: Vertex, middle: Vertex, end: Vertex) -> bool:
     direction = first_end[0] * \
         first_middle[1] - first_middle[0] * first_end[1]
 
-    return direction <= 0
+    if direction < 0:
+        return Direction.LEFT
+    elif direction > 0:
+        return Direction.RIGHT
+    else:
+        return Direction.COLINEAR
