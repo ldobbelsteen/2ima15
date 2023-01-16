@@ -5,6 +5,10 @@ from datastructures.DCEL import *
 
 
 def make_monotone(dcel: DCEL):
+    """
+    Subdivides the input polygon into y-monotone regions by inserting edges.
+    """
+
     def handle_vertex(vertex: Vertex, status):
         if vertex.type == VertexType.START:
             # we state the left edge is the incident edge because of the counter clock wise rotation.
@@ -43,12 +47,13 @@ def make_monotone(dcel: DCEL):
         if vertex.type == VertexType.REGULAR_RIGHT:
             if (vertex.incident_half_edge.twin.origin.y > vertex.y or
                 vertex.incident_half_edge.twin.origin.y == vertex.y and
-                vertex.incident_half_edge.twin.origin.x > vertex.x):
+                vertex.incident_half_edge.twin.origin.x < vertex.x):
                 upper_edge = vertex.incident_half_edge
                 lower_edge = vertex.incident_half_edge.prev
             else:
                 upper_edge = vertex.incident_half_edge.prev
                 lower_edge = vertex.incident_half_edge
+            print(f"(({upper_edge.origin.x}, {upper_edge.origin.y}), ({upper_edge.twin.origin.x}, {upper_edge.twin.origin.y}))")
             if upper_edge.helper and upper_edge.helper.type == VertexType.MERGE:
                 dcel.insert_edge(upper_edge.helper, vertex)
             status = status.delete(upper_edge,vertex.y)
@@ -70,6 +75,10 @@ def make_monotone(dcel: DCEL):
         vertex = vertices[i]
         print(f"Now handling: {vertex.type}: ({vertex.x}, {vertex.y})")
         status = handle_vertex(vertex, status)
+    
+    # Now that we're finished editing the DCEL we can recompute  the faces
+    dcel.recompute_faces()
+
     return dcel 
 
 

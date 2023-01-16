@@ -77,6 +77,8 @@ class DCEL:
         holes:
             A list of lists of vertices adhering to the same format as outer_boundary.
         """
+
+        print("Building DCEL...")
         self.half_edges = []
         self.vertices = []
         self.faces = []
@@ -102,6 +104,7 @@ class DCEL:
         self.faces.append(interior_face)
         self.faces.append(boundary_outer_face)
         self.compute_vertex_types()
+        print("Finished building DCEL.")
 
     
     def in_between(self, v1, v2, v1_incident_edge):
@@ -127,6 +130,7 @@ class DCEL:
     def insert_edge(self, v1: Vertex, v2: Vertex):
         """
         Inserts an edge between v1 and v2, v1 and v2 should be vertices in self.vertices.
+        Does not update the faces, for this self.recompute_faces() should be called.
         """
         # Find the outgoing half edge of v1 that comes after the new edge in counter-clockwise order
         v1_edge_incident_to_f = v1.incident_half_edge
@@ -161,6 +165,10 @@ class DCEL:
     
 
     def recompute_faces(self):
+        """
+        Recomputes the faces of the DCEL.
+        """
+        print("Recomputing faces...")
         new_faces = []
         for e in self.half_edges:
             if not e.marked:
@@ -177,11 +185,12 @@ class DCEL:
         for e in self.half_edges:
             e.marked = False
         self.faces = new_faces
+        print("Finished recomputing faces.")
 
 
     def delete_edge(self, e: HalfEdge):
         """
-        Deletes the edge e, e should be a vertex in self.vertices
+        Deletes the edge e, e should be a half-edge contained in self.half_edges
         """
         # TODO: implement this
         pass
