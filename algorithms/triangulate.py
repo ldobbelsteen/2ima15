@@ -87,16 +87,16 @@ def extract_boundaries(highest_leftmost: HalfEdge) -> tuple[list[Vertex], list[V
     right_boundary: list[Vertex] = []
 
     switched_direction = False
-    current = highest_leftmost.next
+    current = highest_leftmost.prev
 
     while current != highest_leftmost:
-        if current.next.origin.y > current.origin.y:
+        if current.prev.origin.y > current.origin.y:
             switched_direction = True
         if not switched_direction:
             left_boundary.append(current.origin)
         else:
             right_boundary.append(current.origin)
-        current = current.next
+        current = current.prev
 
     right_boundary.reverse()
 
