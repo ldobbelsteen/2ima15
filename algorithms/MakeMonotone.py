@@ -53,7 +53,6 @@ def make_monotone(dcel: DCEL):
             else:
                 upper_edge = vertex.incident_half_edge.prev
                 lower_edge = vertex.incident_half_edge
-            print(f"(({upper_edge.origin.x}, {upper_edge.origin.y}), ({upper_edge.twin.origin.x}, {upper_edge.twin.origin.y}))")
             if upper_edge.helper and upper_edge.helper.type == VertexType.MERGE:
                 dcel.insert_edge(upper_edge.helper, vertex)
             status = status.delete(upper_edge,vertex.y)
@@ -68,15 +67,16 @@ def make_monotone(dcel: DCEL):
         
         return status
 
+    print("Subdividing the polygon into y-monotone pieces...")
     vertices = dcel.vertices 
     vertices.sort(key=lambda coordinate: (-coordinate.y, coordinate.x))
     status = EdgebstNode()
     for i in range(len(vertices)):
         vertex = vertices[i]
-        print(f"Now handling: {vertex.type}: ({vertex.x}, {vertex.y})")
         status = handle_vertex(vertex, status)
     
     # Now that we're finished editing the DCEL we can recompute  the faces
+    print("Finished subdividing the polygon into y-monotone pieces.")
     dcel.recompute_faces()
 
     return dcel 
