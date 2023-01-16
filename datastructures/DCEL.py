@@ -34,7 +34,7 @@ class Vertex:
         self.y = y
         self.incident_half_edge = None
         # Required for algorithm
-        self.type = None # TODO: compute this in DCEL constructor
+        self.type = None 
 
 
 class HalfEdge:
@@ -135,20 +135,20 @@ class DCEL:
         # Find the outgoing half edge of v1 that comes after the new edge in counter-clockwise order
         v1_edge_incident_to_f = v1.incident_half_edge
         while not self.in_between(v1, v2, v1_edge_incident_to_f):
-            if v1_edge_incident_to_f.twin.origin.x == v2.x and v1_edge_incident_to_f.twin.origin.y == v2.y: #TODO: THIS HAPPENS IN CASE WE'RE INSERTING A DUPE.
-                print(f"Inserting Duplicate edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
-                return
-            elif edge_angle(v1, v2) == edge_angle(v1, v1_edge_incident_to_f.twin.origin):
-                print(f"Inserting overlapping edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
-                return
+            # if v1_edge_incident_to_f.twin.origin.x == v2.x and v1_edge_incident_to_f.twin.origin.y == v2.y: #TODO: THIS HAPPENS IN CASE WE'RE INSERTING A DUPE.
+            #     print(f"Inserting Duplicate edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
+            #     return
+            # elif edge_angle(v1, v2) == edge_angle(v1, v1_edge_incident_to_f.twin.origin):
+            #     print(f"Inserting overlapping edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
+            #     return
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
 
         # Find the outgoing half edge of v2 that comes after the new edge in counter-clockwise order
         v2_edge_incident_to_f = v2.incident_half_edge
         while not self.in_between(v2, v1, v2_edge_incident_to_f):
-            if edge_angle(v2, v1) == edge_angle(v2, v2_edge_incident_to_f.twin.origin):
-                print(f"Inserting overlapping edge: (({v2.x}, {v2.y}), ({v1.x}, {v1.y}))")
-                return
+            # if edge_angle(v2, v1) == edge_angle(v2, v2_edge_incident_to_f.twin.origin):
+            #     print(f"Inserting overlapping edge: (({v2.x}, {v2.y}), ({v1.x}, {v1.y}))")
+            #     return
             v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
 
         h1 = HalfEdge(v1)
