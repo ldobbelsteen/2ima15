@@ -3,7 +3,7 @@ from datastructures.Rationals import Rationals as rat
 def slope(edge):
     return rat(edge.twin.origin.y - edge.origin.y, edge.twin.origin.x - edge.origin.x)
 
-def xOfEdge(edge, y):
+def x_of_edge(edge, y):
     # If edge is vertical:
     if edge.origin.x == edge.twin.origin.x:
         return rat(edge.origin.x)
@@ -13,16 +13,13 @@ def xOfEdge(edge, y):
     # Edge is not horizontal nor vertical:
     else:
         b = rat(edge.origin.y) - slope(edge) * rat(edge.origin.x)
-        xEdge = (rat(y) - b) / slope(edge)
-        return xEdge
+        x_edge = (rat(y) - b) / slope(edge)
+        return x_edge
 
-def edgeSmaller(edge1,edge2,y):
-    xEdge1 = xOfEdge(edge1, y)
-    xEdge2 = xOfEdge(edge2, y)
-    return xEdge1 < xEdge2
-
-def leftOfVertex(edge,vertex):
-    return xOfEdge(edge, vertex.y) < rat(vertex.x) 
+def edge_smaller(edge1,edge2,y):
+    x_edge1 = x_of_edge(edge1, y)
+    x_edge2 = x_of_edge(edge2, y)
+    return x_edge1 < x_edge2
 
 
 class EdgebstNode:
@@ -41,7 +38,7 @@ class EdgebstNode:
         if self.val == val or self.val == self.val.twin:
             return
 
-        if edgeSmaller(val, self.val, y):
+        if edge_smaller(val, self.val, y):
             if self.left:
                 self.left.insert_interval(val, right_end, y)
                 return
@@ -57,12 +54,12 @@ class EdgebstNode:
         if self == None:
             return self
         # Element is located in left subtree
-        if edgeSmaller(val, self.val, y):
+        if edge_smaller(val, self.val, y):
             if self.left:
                 self.left = self.left.delete_subfunction(val, y)
             return self
         # Element is locate in right subtree
-        if not edgeSmaller(val, self.val, y) and val != self.val and val != self.val.twin:
+        if not edge_smaller(val, self.val, y) and val != self.val and val != self.val.twin:
             if self.right:
                 self.right = self.right.delete_subfunction(val, y)
             return self
@@ -85,15 +82,15 @@ class EdgebstNode:
         """
         if not self.val:
             return None
-        if xOfEdge(self.val, y) < x and (not self.right_end or x < xOfEdge(self.right_end, y)):
+        if x_of_edge(self.val, y) < x and (not self.right_end or x < x_of_edge(self.right_end, y)):
             return (self.val, self.right_end)
-        if xOfEdge(self.val, y) > x:
+        if x_of_edge(self.val, y) > x:
             if self.left:
                 return self.left.range_query(x, y)
             else:
                 # The query point lies left of the leftmost interval
                 return None
-        if xOfEdge(self.right_end, y) < x:
+        if x_of_edge(self.right_end, y) < x:
             return self.right.range_query(x, y)
         
     def right_end_query(self, val, y):
@@ -102,9 +99,9 @@ class EdgebstNode:
         """
         if self.val == val or self.val == val.twin:
             return self.right_end
-        if xOfEdge(self.val, y) > xOfEdge(val, y):
+        if x_of_edge(self.val, y) > x_of_edge(val, y):
             return self.left.right_end_query(val, y)
-        if xOfEdge(self.val, y) < xOfEdge(val, y):
+        if x_of_edge(self.val, y) < x_of_edge(val, y):
             return self.right.right_end_query(val, y)
     
     def left_end_query(self, right_end, y):
@@ -113,11 +110,11 @@ class EdgebstNode:
         """
         if self.right_end == right_end or self.right_end == right_end.twin:
             return self.val
-        if not self.right_end or xOfEdge(self.right_end, y) > xOfEdge(right_end, y):
+        if not self.right_end or x_of_edge(self.right_end, y) > x_of_edge(right_end, y):
             if not self.left:
                 return None
             return self.left.left_end_query(right_end, y)
-        if xOfEdge(self.right_end, y) < xOfEdge(right_end, y):
+        if x_of_edge(self.right_end, y) < x_of_edge(right_end, y):
             return self.right.left_end_query(right_end, y)
 
     def get_left_most_edge(self):
@@ -127,12 +124,17 @@ class EdgebstNode:
             return self.left.get_left_most_edge()
 
     def insert(self, val, y):
+        """
+        Inserts a new edge into the tree by first querying the interval this new edge is contained in
+        (which will now be rightbounded by the newly inserted edge) and replacing it with the two new
+        intervals.
+        """
         if self.val == None:
             self.insert_interval(val, None, y)
             return self
         else:
             # First query the interval in which the new edge is contained
-            interval = self.range_query(xOfEdge(val, y), y)
+            interval = self.range_query(x_of_edge(val, y), y)
             if not interval:
                 # The edge we are inserting is the leftmost edge, i.e. it is not contained in any existing intervals
                 right_end = self.get_left_most_edge()
@@ -149,6 +151,10 @@ class EdgebstNode:
                 return t
 
     def delete(self, val, y):
+        """
+        Deletes an edge from the tree. If there was an interval left of the deleted edge it extends,
+        hence we replace this interval with the updated one.
+        """
         # Find right end of interval being deleted
         right_end = self.right_end_query(val, y)
         # Find left edge of interval whose left end now changed and replace it
@@ -211,17 +217,21 @@ class EdgebstNode:
     def is_valid_bst_val(self, y):
         valid = True
         if self.left:
-            valid = valid and self.left.is_valid_bst_val(y) and xOfEdge(self.left.val, y) < xOfEdge(self.val, y)
+            valid = (valid and self.left.is_valid_bst_val(y) and 
+                     x_of_edge(self.left.val, y) < x_of_edge(self.val, y))
         if self.right:
-            valid = valid and self.right.is_valid_bst_val(y) and xOfEdge(self.right.val, y) > xOfEdge(self.val, y)
+            valid = (valid and self.right.is_valid_bst_val(y) and
+                     x_of_edge(self.right.val, y) > x_of_edge(self.val, y))
         return valid
     
     def is_valid_bst_right_end(self, y):
         valid = True
         if self.left:
-            valid = valid and self.left.is_valid_bst_right_end(y) and (not self.right_end or xOfEdge (self.left.right_end, y) < xOfEdge(self.right_end, y))
+            valid = (valid and self.left.is_valid_bst_right_end(y) and 
+                     (not self.right_end or x_of_edge (self.left.right_end, y) < x_of_edge(self.right_end, y)))
         if self.right:
-            valid = valid and self.right.is_valid_bst_right_end(y) and (not self.right.right_end or xOfEdge(self.right.right_end, y) > xOfEdge(self.right_end, y))
+            valid = (valid and self.right.is_valid_bst_right_end(y) and 
+                     (not self.right.right_end or x_of_edge(self.right.right_end, y) > x_of_edge(self.right_end, y)))
         return valid
 
     def exists_right_none(self):
