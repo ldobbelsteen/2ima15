@@ -1,15 +1,21 @@
-from datastructures.DCEL import DCEL, Vertex, HalfEdge
+from datastructures.DCEL import DCEL, Vertex, HalfEdge, Face
 from enum import Enum
 
 
-def triangulate_monotone_polygon(dcel: DCEL):
+def triangulate_monotone_polygon(dcel: DCEL, verbose=False, triangulate_convex_faces=True):
     """
     Triangulate a y-monotone partitioned polygon.
     """
 
-    print("Triangulating y-monotone pieces...")
+    if verbose:
+        print("Triangulating y-monotone pieces...")
+    
     # Triangulate each y-monotone partition
     for face in dcel.interior_faces():
+        # If face is already convex we don't need to triangulate it
+        if not triangulate_convex_faces and is_convex(face):
+            continue
+
         # Extract the left and right boundaries
         start = highest_leftmost(face.outer_component)
         left_boundary, right_boundary = extract_boundaries(start)
@@ -50,7 +56,8 @@ def triangulate_monotone_polygon(dcel: DCEL):
             dcel.insert_edge(vertices[-1][0], vertex[0])
 
     dcel.recompute_faces()
-    print("Finished triangulating y-monotone pieces.")
+    if verbose:
+        print("Finished triangulating y-monotone pieces.")
 
 
 def highest_leftmost(edge: HalfEdge) -> HalfEdge:
@@ -153,3 +160,15 @@ def get_direction(first: Vertex, middle: Vertex, end: Vertex) -> Direction:
         return Direction.RIGHT
     else:
         return Direction.COLINEAR
+
+
+def is_convex(face: Face):
+    """
+    Returns whether a face is convex by walking around its boundary and seeing if all angles make a right turn
+    """
+    edge = face.outer_component.next
+    while edge != face.outer_component:
+        if get_direction(edge.origin, edge.next.origin, edge.next.next.origin) == Direction.LEFT:
+            return False
+        edge = edge.next
+    return True

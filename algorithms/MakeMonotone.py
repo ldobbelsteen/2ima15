@@ -4,7 +4,7 @@ from datastructures.Edgebst import *
 from datastructures.DCEL import *
 
 
-def make_monotone(dcel: DCEL):
+def make_monotone(dcel: DCEL, verbose=False):
     """
     Subdivides the input polygon into y-monotone regions by inserting edges.
     """
@@ -66,8 +66,8 @@ def make_monotone(dcel: DCEL):
             edge.helper = vertex
         
         return status
-
-    print("Subdividing the polygon into y-monotone pieces...")
+    if verbose:
+        print("Subdividing the polygon into y-monotone pieces...")
     vertices = dcel.vertices 
     vertices.sort(key=lambda coordinate: (-coordinate.y, coordinate.x))
     status = EdgebstNode()
@@ -76,7 +76,8 @@ def make_monotone(dcel: DCEL):
         status = handle_vertex(vertex, status)
     
     # Now that we're finished editing the DCEL we can recompute  the faces
-    print("Finished subdividing the polygon into y-monotone pieces.")
+    if verbose:
+        print("Finished subdividing the polygon into y-monotone pieces.")
     dcel.recompute_faces()
 
     return dcel 

@@ -66,7 +66,7 @@ class DCEL:
         faces: list of Faces
     """
 
-    def __init__(self, outer_boundary: list[dict], holes: list[dict]):
+    def __init__(self, outer_boundary: list[dict], holes: list[dict], verbose=False):
         """
         Creates DCEL from input
         
@@ -78,7 +78,9 @@ class DCEL:
             A list of lists of vertices adhering to the same format as outer_boundary.
         """
 
-        print("Building DCEL...")
+        if verbose:
+            print("Building DCEL...")
+        
         self.half_edges = []
         self.vertices = []
         self.faces = []
@@ -104,7 +106,9 @@ class DCEL:
         self.faces.append(interior_face)
         self.faces.append(boundary_outer_face)
         self.compute_vertex_types()
-        print("Finished building DCEL.")
+
+        if verbose:
+            print("Finished building DCEL.")
 
     
     def in_between(self, v1, v2, v1_incident_edge):
@@ -171,11 +175,14 @@ class DCEL:
         self.half_edges.append(h2)
     
 
-    def recompute_faces(self):
+    def recompute_faces(self, verbose=False):
         """
         Recomputes the faces of the DCEL.
         """
-        print("Recomputing faces...")
+
+        if verbose:
+            print("Recomputing faces...")
+        
         new_faces = []
         for e in self.half_edges:
             if not e.marked:
@@ -197,7 +204,9 @@ class DCEL:
         for e in self.half_edges:
             e.marked = False
         self.faces = new_faces
-        print("Finished recomputing faces.")
+
+        if verbose:
+            print("Finished recomputing faces.")
 
 
     def delete_edge(self, e: HalfEdge):
