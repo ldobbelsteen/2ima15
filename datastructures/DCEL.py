@@ -211,10 +211,35 @@ class DCEL:
 
     def delete_edge(self, e: HalfEdge):
         """
-        Deletes the edge e, e should be a half-edge contained in self.half_edges
+        Deletes the half-edge e, e should be a half-edge contained in self.half_edges
         """
-        # TODO: implement this
-        pass
+
+        # Update the pointers
+        e_prev = e.prev
+        e_next = e.next
+        twin_prev = e.twin.prev
+        twin_next = e.twin.next
+
+        e_prev.next = twin_next
+        e_next.prev = twin_prev
+        twin_prev.next = e_next
+        twin_next.prev = e_prev
+
+        # If deleted edge was the outer component of its incident face, update the pointer of the face to another edge
+        f = e.incident_face
+        if f.outer_component == e:
+            f.outer_component = e_next
+        
+        # Update faces
+        current_edge = e_next
+        current_edge.incident_face = f
+        current_edge = current_edge.next
+        while current_edge != e_next:
+            current_edge.incident_face = f
+            current_edge = current_edge.next
+
+        self.faces.remove(e.twin.incident_face)
+        self.half_edges.remove(e)
 
 
     def interior_faces(self):
