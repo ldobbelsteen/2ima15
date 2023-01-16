@@ -240,6 +240,7 @@ class DCEL:
 
         self.faces.remove(e.twin.incident_face)
         self.half_edges.remove(e)
+        self.half_edges.remove(e.twin)
 
 
     def interior_faces(self):
