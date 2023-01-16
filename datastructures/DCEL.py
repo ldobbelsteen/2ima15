@@ -138,6 +138,9 @@ class DCEL:
             if v1_edge_incident_to_f.twin.origin.x == v2.x and v1_edge_incident_to_f.twin.origin.y == v2.y: #TODO: THIS HAPPENS IN CASE WE'RE INSERTING A DUPE.
                 print(f"Inserting Duplicate edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
                 return
+            elif edge_angle(v1, v2) == edge_angle(v1, v1_edge_incident_to_f.twin.origin):
+                print(f"Inserting overlapping edge: (({v1.x}, {v1.y}), ({v2.x}, {v2.y}))")
+                return
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
 
         f = v1_edge_incident_to_f.incident_face
