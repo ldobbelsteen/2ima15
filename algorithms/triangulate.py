@@ -6,9 +6,10 @@ def triangulate_monotone_polygon(dcel: DCEL):
     Triangulate a y-monotone partitioned polygon.
     """
 
+    print("Triangulating y-monotone pieces...")
     # Triangulate each y-monotone partition
     for face in dcel.interior_faces():
-
+        print("Face!")
         # Extract the left and right boundaries
         start = highest_leftmost(face.outer_component)
         left_boundary, right_boundary = extract_boundaries(start)
@@ -29,17 +30,17 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 while len(stack) > 0:
                     vertex = stack.pop()
                     if len(stack) > 0:
-                        # TODO: use correct face
-                        dcel.insert_edge(vertices[i], vertex, face)
+                        print(f"Inserting edge1: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
+                        dcel.insert_edge(vertices[i][0], vertex[0])
                 stack.append(vertices[i - 1])
                 stack.append(vertices[i])
             else:
                 is_left_side = vertices[i][1]
                 vertex = stack.pop()
-                while len(stack) > 0 and ((not is_left_turn(vertices[i], vertex, stack[-1])) if is_left_side else is_left_turn(vertices[i], vertex, stack[-1])):
+                while len(stack) > 0 and ((not is_left_turn(vertices[i][0], vertex[0], stack[-1][0])) if is_left_side else is_left_turn(vertices[i][0], vertex[0], stack[-1][0])):
                     vertex = stack.pop()
-                    # TODO: use correct face
-                    dcel.insert_edge(vertices[i], vertex, face)
+                    print(f"Inserting edge2: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
+                    dcel.insert_edge(vertices[i][0], vertex[0])
                 stack.append(vertex)
                 stack.append(vertices[i])
 
@@ -48,8 +49,11 @@ def triangulate_monotone_polygon(dcel: DCEL):
         stack.pop()
         while len(stack) > 1:
             vertex = stack.pop()
-            # TODO: use correct face
-            dcel.insert_edge(vertices[-1], vertex, face)
+            print(f"Inserting edge3: (({vertices[-1][0].x}, {vertices[-1][0].y}), ({vertex[0].x}, {vertex[0].y}))")
+            dcel.insert_edge(vertices[-1][0], vertex[0])
+
+    dcel.recompute_faces()
+    print("Finished triangulating y-monotone pieces.")
 
 
 def highest_leftmost(edge: HalfEdge) -> HalfEdge:
@@ -75,7 +79,7 @@ def extract_boundaries(highest_leftmost: HalfEdge) -> tuple[list[Vertex], list[V
     highest and leftmost vertex.
     """
 
-    left_boundary: list[Vertex] = [highest_leftmost]
+    left_boundary: list[Vertex] = [highest_leftmost.origin]
     right_boundary: list[Vertex] = []
 
     switched_direction = False
@@ -85,9 +89,9 @@ def extract_boundaries(highest_leftmost: HalfEdge) -> tuple[list[Vertex], list[V
         if current.next.origin.y > current.origin.y:
             switched_direction = True
         if not switched_direction:
-            left_boundary.append(current)
+            left_boundary.append(current.origin)
         else:
-            right_boundary.append(current)
+            right_boundary.append(current.origin)
         current = current.next
 
     right_boundary.reverse()
@@ -106,22 +110,21 @@ def merge_boundaries(left_boundary: list[Vertex], right_boundary: list[Vertex]) 
 
     left_index = 0
     right_index = 0
-
     for _ in range(len(left_boundary) + len(right_boundary)):
         left_finished = left_index == len(left_boundary)
         right_finished = right_index == len(right_boundary)
         if left_finished and not right_finished:
-            result.append(right_boundary[right_index])
+            result.append((right_boundary[right_index], False))
             right_index += 1
         elif right_finished and not left_finished:
-            result.append(left_boundary[left_index])
+            result.append((left_boundary[left_index], True))
             left_index += 1
         else:
             if left_boundary[left_index].y >= right_boundary[right_index].y:
-                result.append(left_boundary[left_index])
+                result.append((left_boundary[left_index], True))
                 left_index += 1
             else:
-                result.append(right_boundary[right_index])
+                result.append((right_boundary[right_index], False))
                 right_index += 1
 
     return result
