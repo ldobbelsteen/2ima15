@@ -143,11 +143,12 @@ class DCEL:
                 return
             v1_edge_incident_to_f = v1_edge_incident_to_f.twin.next
 
-        f = v1_edge_incident_to_f.incident_face
-
         # Find the outgoing half edge of v2 that comes after the new edge in counter-clockwise order
         v2_edge_incident_to_f = v2.incident_half_edge
         while not self.in_between(v2, v1, v2_edge_incident_to_f):
+            if edge_angle(v2, v1) == edge_angle(v2, v2_edge_incident_to_f.twin.origin):
+                print(f"Inserting overlapping edge: (({v2.x}, {v2.y}), ({v1.x}, {v1.y}))")
+                return
             v2_edge_incident_to_f = v2_edge_incident_to_f.twin.next
 
         h1 = HalfEdge(v1)
@@ -165,6 +166,9 @@ class DCEL:
         v2_edge_incident_to_f.prev.next = h2
         v1_edge_incident_to_f.prev = h2
         v2_edge_incident_to_f.prev = h1
+
+        self.half_edges.append(h1)
+        self.half_edges.append(h2)
     
 
     def recompute_faces(self):
@@ -177,7 +181,12 @@ class DCEL:
             if not e.marked:
                 f = Face()
                 # Even though a face might be subdivided it does not change type
-                f.type = e.incident_face.type
+                if e.incident_face:
+                    f.type = e.incident_face.type
+                # If an edge does not have an incident face it was newly inserted,
+                # and thus adjacent to an interior face
+                else:
+                    f.type = FaceType.INTERIOR
                 f.outer_component = e
                 new_faces.append(f)
                 while not e.marked:
