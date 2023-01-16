@@ -10,7 +10,6 @@ def triangulate_monotone_polygon(dcel: DCEL):
     print("Triangulating y-monotone pieces...")
     # Triangulate each y-monotone partition
     for face in dcel.interior_faces():
-        print("Face!")
         # Extract the left and right boundaries
         start = highest_leftmost(face.outer_component)
         left_boundary, right_boundary = extract_boundaries(start)
@@ -31,8 +30,6 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 while len(stack) > 0:
                     vertex = stack.pop()
                     if len(stack) > 0:
-                        print(
-                            f"Inserting edge1: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
                         dcel.insert_edge(vertices[i][0], vertex[0])
                 stack.append(vertices[i - 1])
                 stack.append(vertices[i])
@@ -41,8 +38,6 @@ def triangulate_monotone_polygon(dcel: DCEL):
                 vertex = stack.pop()
                 while len(stack) > 0 and ((get_direction(vertices[i][0], vertex[0], stack[-1][0])) == Direction.RIGHT if is_left_side else get_direction(vertices[i][0], vertex[0], stack[-1][0]) == Direction.LEFT):
                     vertex = stack.pop()
-                    print(
-                        f"Inserting edge2: (({vertices[i][0].x}, {vertices[i][0].y}), ({vertex[0].x}, {vertex[0].y}))")
                     dcel.insert_edge(vertices[i][0], vertex[0])
                 stack.append(vertex)
                 stack.append(vertices[i])
@@ -52,8 +47,6 @@ def triangulate_monotone_polygon(dcel: DCEL):
         stack.pop()
         while len(stack) > 1:
             vertex = stack.pop()
-            print(
-                f"Inserting edge3: (({vertices[-1][0].x}, {vertices[-1][0].y}), ({vertex[0].x}, {vertex[0].y}))")
             dcel.insert_edge(vertices[-1][0], vertex[0])
 
     dcel.recompute_faces()
