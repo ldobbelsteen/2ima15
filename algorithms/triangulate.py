@@ -166,7 +166,10 @@ def is_convex(face: Face):
     """
     Returns whether a face is convex by walking around its boundary and seeing if all angles make a right turn
     """
-    edge = face.outer_component.next
+    edge = face.outer_component
+    if get_direction(edge.origin, edge.next.origin, edge.next.next.origin) == Direction.LEFT:
+        return False
+    edge = edge.next
     while edge != face.outer_component:
         if get_direction(edge.origin, edge.next.origin, edge.next.next.origin) == Direction.LEFT:
             return False
