@@ -1,7 +1,9 @@
-from datastructures.Rationals import Rationals as rat
+from datastructures.rationals import Rationals as rat
+
 
 def slope(edge):
     return rat(edge.twin.origin.y - edge.origin.y, edge.twin.origin.x - edge.origin.x)
+
 
 def x_of_edge(edge, y):
     # If edge is vertical:
@@ -16,7 +18,8 @@ def x_of_edge(edge, y):
         x_edge = (rat(y) - b) / slope(edge)
         return x_edge
 
-def edge_smaller(edge1,edge2,y):
+
+def edge_smaller(edge1, edge2, y):
     x_edge1 = x_of_edge(edge1, y)
     x_edge2 = x_of_edge(edge2, y)
     return x_edge1 < x_edge2
@@ -92,7 +95,7 @@ class EdgebstNode:
                 return None
         if x_of_edge(self.right_end, y) < x:
             return self.right.range_query(x, y)
-        
+
     def right_end_query(self, val, y):
         """
         given the left end of an interval, returns the right end of that interval
@@ -103,7 +106,7 @@ class EdgebstNode:
             return self.left.right_end_query(val, y)
         if x_of_edge(self.val, y) < x_of_edge(val, y):
             return self.right.right_end_query(val, y)
-    
+
     def left_end_query(self, right_end, y):
         """
         given the right end of an interval, returns the left end of that interval
@@ -175,16 +178,16 @@ class EdgebstNode:
             t.insert_interval(left_end, right_end, y)
             return t
 
-
-    
     # ===== DEBUGGING FUNCTIONS =============================================
 
     def print_nodes(self):
         if not self.val:
             return
-        print(f"left: (({self.val.origin.x}, {self.val.origin.y}), ({self.val.twin.origin.x}, {self.val.twin.origin.y}))")
+        print(
+            f"left: (({self.val.origin.x}, {self.val.origin.y}), ({self.val.twin.origin.x}, {self.val.twin.origin.y}))")
         if self.right_end:
-            print(f"right: (({self.right_end.origin.x}, {self.right_end.origin.y}), ({self.right_end.twin.origin.x}, {self.right_end.twin.origin.y}))")
+            print(
+                f"right: (({self.right_end.origin.x}, {self.right_end.origin.y}), ({self.right_end.twin.origin.x}, {self.right_end.twin.origin.y}))")
         else:
             print("right: None")
         if self.left:
@@ -201,11 +204,11 @@ class EdgebstNode:
         else:
             str_rep = str_rep + "(left: ()"
         if self.right:
-            str_rep = str_rep + "right: " + self.right.nodes_to_string() +")"
+            str_rep = str_rep + "right: " + self.right.nodes_to_string() + ")"
         else:
             str_rep = str_rep + "right ())"
         return str_rep
-    
+
     def node_count(self):
         count = 0
         if self.left:
@@ -217,20 +220,20 @@ class EdgebstNode:
     def is_valid_bst_val(self, y):
         valid = True
         if self.left:
-            valid = (valid and self.left.is_valid_bst_val(y) and 
+            valid = (valid and self.left.is_valid_bst_val(y) and
                      x_of_edge(self.left.val, y) < x_of_edge(self.val, y))
         if self.right:
             valid = (valid and self.right.is_valid_bst_val(y) and
                      x_of_edge(self.right.val, y) > x_of_edge(self.val, y))
         return valid
-    
+
     def is_valid_bst_right_end(self, y):
         valid = True
         if self.left:
-            valid = (valid and self.left.is_valid_bst_right_end(y) and 
-                     (not self.right_end or x_of_edge (self.left.right_end, y) < x_of_edge(self.right_end, y)))
+            valid = (valid and self.left.is_valid_bst_right_end(y) and
+                     (not self.right_end or x_of_edge(self.left.right_end, y) < x_of_edge(self.right_end, y)))
         if self.right:
-            valid = (valid and self.right.is_valid_bst_right_end(y) and 
+            valid = (valid and self.right.is_valid_bst_right_end(y) and
                      (not self.right.right_end or x_of_edge(self.right.right_end, y) > x_of_edge(self.right_end, y)))
         return valid
 

@@ -1,13 +1,12 @@
 from PIL import Image, ImageDraw
-import json
 
 
-def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon_drawing", lines=[], points=[]):
+def render_polygon(polygon, solution={"polygons": []}, resolution=10, name="polygon_drawing", lines=[], points=[]):
     """
     Visualizes the polygon, the format should be confrom the specification of the challenge:
     https://cgshop.ibr.cs.tu-bs.de/competition/cg-shop-2023/#instance-format
     """
-    
+
     outer_boundary_xy = [(p["x"], p["y"]) for p in polygon["outer_boundary"]]
     holes_xy = [[(p["x"], p["y"]) for p in h] for h in polygon["holes"]]
     solution_xy = [[(p["x"], p["y"]) for p in c] for c in solution["polygons"]]
@@ -23,9 +22,11 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     max_x = max([p[0] for p in outer_boundary_xy])
     min_y = min([p[1] for p in outer_boundary_xy])
     max_y = max([p[1] for p in outer_boundary_xy])
-    outer_boundary_xy = [(p[0] - min_x, p[1] - min_y) for p in outer_boundary_xy]
+    outer_boundary_xy = [(p[0] - min_x, p[1] - min_y)
+                         for p in outer_boundary_xy]
     holes_xy = [[(p[0] - min_x, p[1] - min_y) for p in h] for h in holes_xy]
-    solution_xy = [[(p[0] - min_x, p[1] - min_y) for p in h] for h in solution_xy]
+    solution_xy = [[(p[0] - min_x, p[1] - min_y)
+                    for p in h] for h in solution_xy]
     lines = [[(p[0] - min_x, p[1] - min_y) for p in l] for l in lines]
     points = [(p[0] - min_x, p[1] - min_y) for p in points]
     # Set width and height to width and height of polygon
@@ -33,15 +34,19 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     height = (max_y - min_y) * resolution
     size = (width, height)
     # Flip y-axis such that 0,0 is now bottom left in our visualization
-    outer_boundary_xy = [(p[0]*resolution, height - p[1]*resolution) for p in outer_boundary_xy]
-    holes_xy = [[(p[0]*resolution, height - p[1]*resolution) for p in h] for h in holes_xy]
-    solution_xy = [[(p[0]*resolution, height - p[1]*resolution) for p in h] for h in solution_xy]
-    lines = [[(p[0]*resolution, height - p[1]*resolution) for p in l] for l in lines]
+    outer_boundary_xy = [(p[0]*resolution, height - p[1]*resolution)
+                         for p in outer_boundary_xy]
+    holes_xy = [[(p[0]*resolution, height - p[1]*resolution)
+                 for p in h] for h in holes_xy]
+    solution_xy = [[(p[0]*resolution, height - p[1]*resolution)
+                    for p in h] for h in solution_xy]
+    lines = [[(p[0]*resolution, height - p[1]*resolution)
+              for p in l] for l in lines]
     points = [(p[0]*resolution, height - p[1]*resolution) for p in points]
 
-    # Draw polygons                                                   
-    img = Image.new("RGB", size, "white") 
-    img1 = ImageDraw.Draw(img)  
+    # Draw polygons
+    img = Image.new("RGB", size, "white")
+    img1 = ImageDraw.Draw(img)
     img1.polygon(outer_boundary_xy, fill="#eeeeff", outline=None)
     for h_xy in holes_xy:
         img1.polygon(h_xy, fill="white", outline=None)
@@ -53,12 +58,6 @@ def drawPolygon(polygon, solution={"polygons": []}, resolution=10, name="polygon
     for line in lines:
         img1.line(line, fill="green", width=resolution)
     for p in points:
-        img1.ellipse([(p[0]-resolution, p[1]-resolution), (p[0]+resolution, p[1]+resolution)], fill="black")
+        img1.ellipse([(p[0]-resolution, p[1]-resolution),
+                     (p[0]+resolution, p[1]+resolution)], fill="black")
     img.save(name + ".png")
-
-
-# For testing purposes:
-if __name__ == "__main__":
-    f = open("..\instances\ccheese142.instance.json")
-    polygon = json.load(f)
-    drawPolygon(polygon)

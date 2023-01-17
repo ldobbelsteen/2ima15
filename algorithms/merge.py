@@ -1,5 +1,6 @@
-from datastructures.DCEL import *
+from datastructures.dcel import *
 from algorithms.triangulate import get_direction, Direction
+
 
 def bruteforce_merge_adjacent_faces(dcel: DCEL):
     """
@@ -20,7 +21,6 @@ def bruteforce_merge_adjacent_faces(dcel: DCEL):
             edge = edge.next
         return False
 
-    
     def convex_after_deleting(edge: HalfEdge):
         """
         Returns whether the face resulting from the deletion of edge will be convex.
@@ -36,11 +36,10 @@ def bruteforce_merge_adjacent_faces(dcel: DCEL):
 
         # If neither of the two new corners in the polygon are concave, we can merge
         if (get_direction(edge.twin.prev.origin, edge.next.origin, edge.next.next.origin) != Direction.LEFT and
-            get_direction(edge.prev.origin, edge.origin, edge.twin.next.next.origin) != Direction.LEFT):
+                get_direction(edge.prev.origin, edge.origin, edge.twin.next.next.origin) != Direction.LEFT):
             return True
         else:
             return False
-
 
     did_merge = True
     while did_merge:

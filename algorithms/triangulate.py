@@ -1,15 +1,15 @@
-from datastructures.DCEL import DCEL, Vertex, HalfEdge, Face
+from datastructures.dcel import DCEL, Vertex, HalfEdge, Face
 from enum import Enum
 
 
-def triangulate_monotone_polygon(dcel: DCEL, verbose=False, triangulate_convex_faces=True):
+def triangulate_monotone(dcel: DCEL, verbose=False, triangulate_convex_faces=True):
     """
     Triangulate a y-monotone partitioned polygon.
     """
 
     if verbose:
         print("Triangulating y-monotone pieces...")
-    
+
     # Triangulate each y-monotone partition
     for face in dcel.interior_faces():
         # If face is already convex we don't need to triangulate it

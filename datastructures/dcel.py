@@ -1,10 +1,12 @@
 from enum import Enum
-from datastructures.Rationals import Rationals as rat
+from datastructures.rationals import Rationals as rat
+
 
 class FaceType(Enum):
     OUTER = 0
     INTERIOR = 1
     HOLE = 2
+
 
 class VertexType(Enum):
     START = 0
@@ -15,8 +17,8 @@ class VertexType(Enum):
     REGULAR_LEFT = 5
 
 # every (half-)edge:
-#   origin (vertex)    
-#   twin (half-edge)   
+#   origin (vertex)
+#   twin (half-edge)
 #   incident_face (face)
 #   next (half-edge in cycle of incident face)
 #   prev (half-edge in cycle of incident face)
@@ -28,13 +30,14 @@ class VertexType(Enum):
 #   outer_component (half-edge of outer cycle)
 #   inner_components (list of half-edges for inner cycles bounding faces) REDUNDANT?
 
+
 class Vertex:
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.incident_half_edge = None
         # Required for algorithm
-        self.type = None 
+        self.type = None
 
 
 class HalfEdge:
@@ -69,7 +72,7 @@ class DCEL:
     def __init__(self, outer_boundary: list[dict], holes: list[dict], verbose=False):
         """
         Creates DCEL from input
-        
+
         outer_boundary:
             List of vertices represented as pairs (x, y)
             where x and y are the coordinates of the vertex,
@@ -80,7 +83,7 @@ class DCEL:
 
         if verbose:
             print("Building DCEL...")
-        
+
         self.half_edges = []
         self.vertices = []
         self.faces = []
@@ -88,21 +91,23 @@ class DCEL:
         # Outer face incident to outer boundary
         boundary_outer_face = Face()
         boundary_outer_face.type = FaceType.OUTER
-        # The face that is the interior of the polygon 
+        # The face that is the interior of the polygon
         # (our input format guarantees that at initalization there is at most 1 such face)
         interior_face = Face()
         interior_face.type = FaceType.INTERIOR
 
         # Initialize vertices and edges on outer boundary:
-        self.process_boundary(outer_boundary, interior_face, boundary_outer_face)
+        self.process_boundary(
+            outer_boundary, interior_face, boundary_outer_face)
 
         # Initialize vertices and edge on hole boundaries:
         for hole_boundary in holes:
             hole_outer_face = Face()
             hole_outer_face.type = FaceType.HOLE
-            self.process_boundary(hole_boundary, interior_face, hole_outer_face)
+            self.process_boundary(
+                hole_boundary, interior_face, hole_outer_face)
             self.faces.append(hole_outer_face)
-        
+
         self.faces.append(interior_face)
         self.faces.append(boundary_outer_face)
         self.compute_vertex_types()
@@ -110,14 +115,13 @@ class DCEL:
         if verbose:
             print("Finished building DCEL.")
 
-    
     def in_between(self, v1, v2, v1_incident_edge):
         """
         Checks whether the edge (v1, v2) falls in between v1_incident_edge and its prev
         """
         if edge_angle(v1, v1_incident_edge.twin.origin) > edge_angle(v1, v1_incident_edge.prev.origin):
             if (edge_angle(v1, v1_incident_edge.twin.origin) > edge_angle(v1, v2) and
-                edge_angle(v1, v1_incident_edge.prev.origin) < edge_angle(v1, v2)):
+                    edge_angle(v1, v1_incident_edge.prev.origin) < edge_angle(v1, v2)):
                 return True
             else:
                 return False
@@ -125,11 +129,10 @@ class DCEL:
         # and its prev
         else:
             if (edge_angle(v1, v1_incident_edge.twin.origin) > edge_angle(v1, v2) or
-                edge_angle(v1, v1_incident_edge.prev.origin) < edge_angle(v1, v2)):
+                    edge_angle(v1, v1_incident_edge.prev.origin) < edge_angle(v1, v2)):
                 return True
             else:
                 return False
-
 
     def insert_edge(self, v1: Vertex, v2: Vertex):
         """
@@ -173,7 +176,6 @@ class DCEL:
 
         self.half_edges.append(h1)
         self.half_edges.append(h2)
-    
 
     def recompute_faces(self, verbose=False):
         """
@@ -182,7 +184,7 @@ class DCEL:
 
         if verbose:
             print("Recomputing faces...")
-        
+
         new_faces = []
         for e in self.half_edges:
             if not e.marked:
@@ -208,7 +210,6 @@ class DCEL:
         if verbose:
             print("Finished recomputing faces.")
 
-
     def delete_edge(self, e: HalfEdge):
         """
         Deletes the half-edge e, e should be a half-edge contained in self.half_edges
@@ -229,7 +230,7 @@ class DCEL:
         f = e.incident_face
         if f.outer_component == e:
             f.outer_component = e_next
-        
+
         # Update faces
         current_edge = e_next
         current_edge.incident_face = f
@@ -242,13 +243,11 @@ class DCEL:
         self.half_edges.remove(e)
         self.half_edges.remove(e.twin)
 
-
     def interior_faces(self):
         """
         Returns the faces that are contained in the polygon.
         """
         return [f for f in self.faces if f.type == FaceType.INTERIOR]
-
 
     def format_solution(self):
         """
@@ -267,9 +266,8 @@ class DCEL:
                 polygon.append({"x": e.origin.x, "y": e.origin.y})
                 e = e.next
             polygons.append(polygon)
-        
+
         return {"polygons": polygons}
-    
 
     def process_boundary(self, boundary: list[dict], inner_face: Face, outer_face: Face):
         """
@@ -310,7 +308,7 @@ class DCEL:
             old_h1 = h1
             old_h2 = h2
             v1 = v2
-        
+
         # Add edges between the last and the first vertex in the list
         h1 = HalfEdge(v1)
         h2 = HalfEdge(first_vertex)
@@ -336,12 +334,11 @@ class DCEL:
         self.half_edges.append(h1)
         self.half_edges.append(h2)
 
-        #outer_face.inner_components.append(h1)
+        # outer_face.inner_components.append(h1)
         if outer_face.type == FaceType.OUTER:
             inner_face.outer_component = h2
         else:
             outer_face.outer_component = h1
-    
 
     def compute_vertex_types(self):
         def compute_vertex_types_of_boundary(vertex: Vertex, hole):
@@ -379,7 +376,7 @@ class DCEL:
                             else:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                         else:
-                            if not hole: 
+                            if not hole:
                                 current_vertex.type = VertexType.REGULAR_LEFT
                             else:
                                 current_vertex.type = VertexType.REGULAR_RIGHT
@@ -435,65 +432,68 @@ class DCEL:
         # Do the same for the holes
         for f in self.faces:
             if f.type == FaceType.INTERIOR:
-                compute_vertex_types_of_boundary(f.outer_component.origin, hole=False)
+                compute_vertex_types_of_boundary(
+                    f.outer_component.origin, hole=False)
             if f.type == FaceType.HOLE:
-                compute_vertex_types_of_boundary(f.outer_component.origin, hole=True)
+                compute_vertex_types_of_boundary(
+                    f.outer_component.origin, hole=True)
 
 
 def edge_angle(v1: Vertex, v2: Vertex):
-            """
-            Returns a pair (a, b), where a is either 0, 1, 2, or 3, and b is the slope of the edge (v1, v2) (or None if the slope is (-)infinity).
-            a = 0 implies that (v1, v2) points to the right
-            a = 1 implies that (v1, v2) points upwards
-            a = 2 implies that (v1, v2) points to the left
-            a = 3 implies that (v1, v2) points downwards
-            """
-            # Edge points to the right
-            if v2.x-v1.x > 0:
-                return (0, rat(v2.y - v1.y, v2.x - v1.x))
-            # Edge points to the left
-            elif v2.x-v1.x < 0:
-                return (2, rat(v2.y - v1.y, v2.x - v1.x))
-            # Edge points vertically upwards
-            elif v2.y > v1.y:
-                return (1, None)
-            # Edge points vertically downwards
-            else:
-                return (3, None)
+    """
+    Returns a pair (a, b), where a is either 0, 1, 2, or 3, and b is the slope of the edge (v1, v2) (or None if the slope is (-)infinity).
+    a = 0 implies that (v1, v2) points to the right
+    a = 1 implies that (v1, v2) points upwards
+    a = 2 implies that (v1, v2) points to the left
+    a = 3 implies that (v1, v2) points downwards
+    """
+    # Edge points to the right
+    if v2.x-v1.x > 0:
+        return (0, rat(v2.y - v1.y, v2.x - v1.x))
+    # Edge points to the left
+    elif v2.x-v1.x < 0:
+        return (2, rat(v2.y - v1.y, v2.x - v1.x))
+    # Edge points vertically upwards
+    elif v2.y > v1.y:
+        return (1, None)
+    # Edge points vertically downwards
+    else:
+        return (3, None)
 
 
 def leftmost_edge(e1, e2, up):
-        """
-        Returns the leftmost_edge given two adjacent edges that both point upwards or both point downwards.
-        """
-        angle_e1 = edge_angle(e1.origin, e1.twin.origin)
-        angle_e2 = edge_angle(e2.origin, e2.twin.origin)
-        if up:
+    """
+    Returns the leftmost_edge given two adjacent edges that both point upwards or both point downwards.
+    """
+    angle_e1 = edge_angle(e1.origin, e1.twin.origin)
+    angle_e2 = edge_angle(e2.origin, e2.twin.origin)
+    if up:
+        if angle_e1 > angle_e2:
+            return e1
+        else:
+            return e2
+    else:
+        if angle_e1[0] == 0 and angle_e2[0] == 0 or angle_e1[0] >= 2 and angle_e2[0] >= 2:
+            if angle_e1 > angle_e2:
+                return e2
+            else:
+                return e1
+        else:
             if angle_e1 > angle_e2:
                 return e1
             else:
                 return e2
-        else:
-            if angle_e1[0] == 0 and angle_e2[0] == 0 or angle_e1[0] >= 2 and angle_e2[0] >= 2:
-                if angle_e1 > angle_e2:
-                    return e2
-                else:
-                    return e1
-            else:
-                if angle_e1 > angle_e2:
-                    return e1
-                else:
-                    return e2
 
 
 # For testing purposes:
 if __name__ == "__main__":
-    dcel = DCEL([{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}], [[{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}], [{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}]])
+    dcel = DCEL([{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}], [[{"x": 0, "y": 0}, {
+                "x": 1, "y": 1}, {"x": 2, "y": 2}], [{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}]])
 
     for v in dcel.vertices:
         if v.x == None or v.y == None or v.incident_half_edge == None:
             raise Exception("Nonevalue for vertex attribute")
-        
+
         if not v.incident_half_edge.twin.next.origin == v:
             raise Exception("Incorrect DCEL")
 
