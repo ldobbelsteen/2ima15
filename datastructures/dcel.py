@@ -261,10 +261,10 @@ class DCEL:
             polygon = list()
             e = f.outer_component
             polygon.append({"x": e.origin.x, "y": e.origin.y})
-            e = e.next
+            e = e.prev
             while e != f.outer_component:
                 polygon.append({"x": e.origin.x, "y": e.origin.y})
-                e = e.next
+                e = e.prev
             polygons.append(polygon)
 
         return {"polygons": polygons}
