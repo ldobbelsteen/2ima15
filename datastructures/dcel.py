@@ -243,6 +243,22 @@ class DCEL:
         self.half_edges.remove(e)
         self.half_edges.remove(e.twin)
 
+    def rotate_right(self):
+        """
+        Rotates all points 90 degrees clockwise
+        """
+        for v in self.vertices:
+            v.x, v.y = v.y, -v.x
+        self.compute_vertex_types()
+
+    def rotate_left(self):
+        """
+        Rotates all points 90 degrees counter-clockwise
+        """
+        for v in self.vertices:
+            v.x, v.y = -v.y, v.x
+        self.compute_vertex_types()
+
     def interior_faces(self):
         """
         Returns the faces that are contained in the polygon.
