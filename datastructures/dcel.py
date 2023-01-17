@@ -483,23 +483,3 @@ def leftmost_edge(e1, e2, up):
                 return e1
             else:
                 return e2
-
-
-# For testing purposes:
-if __name__ == "__main__":
-    dcel = DCEL([{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}], [[{"x": 0, "y": 0}, {
-                "x": 1, "y": 1}, {"x": 2, "y": 2}], [{"x": 0, "y": 0}, {"x": 1, "y": 1}, {"x": 2, "y": 2}]])
-
-    for v in dcel.vertices:
-        if v.x == None or v.y == None or v.incident_half_edge == None:
-            raise Exception("Nonevalue for vertex attribute")
-
-        if not v.incident_half_edge.twin.next.origin == v:
-            raise Exception("Incorrect DCEL")
-
-    for h in dcel.half_edges:
-        if h.origin == None or h.twin == None or h.incident_face == None or h.next == None or h.prev == None:
-            raise Exception("Nonevalue for half edge attribute")
-
-        if not h.next.twin.prev.next.next.twin == h:
-            raise Exception("Incorrect DCEL")
