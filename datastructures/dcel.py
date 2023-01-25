@@ -243,20 +243,22 @@ class DCEL:
         self.half_edges.remove(e)
         self.half_edges.remove(e.twin)
 
-    def rotate_right(self):
+    def rotate_right(self, times=1):
         """
-        Rotates all points 90 degrees clockwise
+        Rotates all points times * 90 degrees clockwise
         """
-        for v in self.vertices:
-            v.x, v.y = v.y, -v.x
+        for _ in range(times):
+            for v in self.vertices:
+                v.x, v.y = v.y, -v.x
         self.compute_vertex_types()
 
-    def rotate_left(self):
+    def rotate_left(self, times=1):
         """
-        Rotates all points 90 degrees counter-clockwise
+        Rotates all points times * 90 degrees counter-clockwise
         """
-        for v in self.vertices:
-            v.x, v.y = -v.y, v.x
+        for _ in range(times):
+            for v in self.vertices:
+                v.x, v.y = -v.y, v.x
         self.compute_vertex_types()
 
     def interior_faces(self):

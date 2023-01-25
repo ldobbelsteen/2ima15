@@ -1,6 +1,5 @@
 from datastructures.dcel import *
 from algorithms.triangulate import get_direction, Direction
-import random
 
 
 def bruteforce_merge_adjacent_faces(dcel: DCEL):
@@ -31,12 +30,11 @@ def bruteforce_merge_adjacent_faces(dcel: DCEL):
                 break
 
 
-def hertel_mehlhorn(dcel: DCEL):
+def hertel_mehlhorn(dcel: DCEL, permutation=None):
     diagonals = [h for h in dcel.half_edges if h.incident_face.type == FaceType.INTERIOR and h.twin.incident_face.type == FaceType.INTERIOR]
-    # Sort diagonals by length in decreasing order:
-    diagonals.sort(key=lambda h: (h.origin.x - h.twin.origin.x)**2 + (h.origin.y - h.twin.origin.y)**2, reverse=True)
-    #random.seed(42)
-    #random.shuffle(diagonals)
+    # Permute the diagonals according to input function if it was given
+    if permutation:
+        permutation(diagonals=diagonals)
 
     # Remove diagonals if resulting polygons, starting with the longest one
     for i in range(len(diagonals)):
