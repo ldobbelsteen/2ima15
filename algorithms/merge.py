@@ -1,5 +1,6 @@
 from datastructures.dcel import *
 from algorithms.triangulate import get_direction, Direction
+import random
 
 
 def bruteforce_merge_adjacent_faces(dcel: DCEL):
@@ -34,6 +35,8 @@ def hertel_mehlhorn(dcel: DCEL):
     diagonals = [h for h in dcel.half_edges if h.incident_face.type == FaceType.INTERIOR and h.twin.incident_face.type == FaceType.INTERIOR]
     # Sort diagonals by length in decreasing order:
     diagonals.sort(key=lambda h: (h.origin.x - h.twin.origin.x)**2 + (h.origin.y - h.twin.origin.y)**2, reverse=True)
+    #random.seed(42)
+    #random.shuffle(diagonals)
 
     # Remove diagonals if resulting polygons, starting with the longest one
     for i in range(len(diagonals)):
@@ -56,6 +59,9 @@ def bruteforce_merge_indirect_neighbours(dcel: DCEL):
     dummy_face.type = FaceType.OUTER
 
     def merge_neighbouring_faces(face):
+        """
+        Iterates over all pairs of edges of face, attempting to merge their incident polygonss
+        """
         edge1 = face.outer_component
         edge2 = edge1.next
         while edge2 != face.outer_component:
@@ -103,6 +109,9 @@ def bruteforce_merge_indirect_neighbours(dcel: DCEL):
             return False
 
     def merge(edge1, edge2):
+        """
+        Merges the faces edge1.twin.incident_face and edge2.twin.incident_face, adding edges if necessary
+        """
         if edge1.twin.origin != edge2.origin:
             h1 = HalfEdge(edge1.twin.origin)
             h2 = HalfEdge(edge2.origin)
@@ -133,6 +142,7 @@ def bruteforce_merge_indirect_neighbours(dcel: DCEL):
             edge2.twin.prev.next = edge1.twin.next
             edge1.twin.next.prev = edge2.twin.prev
 
+        # Merge the faces into one
         edge = edge1.twin.prev.next
         while edge.incident_face != edge1.twin.incident_face:
             edge.incident_face = edge1.twin.incident_face
@@ -140,6 +150,7 @@ def bruteforce_merge_indirect_neighbours(dcel: DCEL):
         edge.incident_face.outer_component = edge
         dcel.faces.remove(edge2.twin.incident_face)
 
+        # Update the incident faces of the twins such that we can not merge them again
         edge1.twin.incident_face = dummy_face
         edge2.twin.incident_face = dummy_face
 
