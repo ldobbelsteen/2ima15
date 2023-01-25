@@ -21,27 +21,6 @@ def bruteforce_merge_adjacent_faces(dcel: DCEL):
             edge = edge.next
         return False
 
-    def convex_after_deleting(edge: HalfEdge):
-        """
-        Returns whether the face resulting from the deletion of edge will be convex.
-        """
-        # We can't merge with an exterior face
-        if edge.twin.incident_face.type != FaceType.INTERIOR:
-            return False
-
-        # If the faces share multiple edges we can't delete only one of them.
-        # The current implementation of the DCEL does not allow for the deletion of multiple edges at once
-        # Note that since we don't introduce steiner points two different convex faces can in fact never share more than one edge.
-        if edge.twin.incident_face == edge.next.twin.incident_face:
-            return False
-
-        # If neither of the two new corners in the polygon are concave, we can merge
-        if (get_direction(edge.twin.prev.origin, edge.next.origin, edge.next.next.origin) != Direction.LEFT and
-                get_direction(edge.prev.origin, edge.origin, edge.twin.next.next.origin) != Direction.LEFT):
-            return True
-        else:
-            return False
-
     did_merge = True
     while did_merge:
         did_merge = False
@@ -50,6 +29,22 @@ def bruteforce_merge_adjacent_faces(dcel: DCEL):
             if did_merge:
                 break
 
+
+def hertel_mehlhorn(dcel: DCEL):
+    diagonals = [h for h in dcel.half_edges if h.incident_face.type == FaceType.INTERIOR and h.twin.incident_face.type == FaceType.INTERIOR]
+    # Sort diagonals by length in decreasing order:
+    diagonals.sort(key=lambda h: (h.origin.x - h.twin.origin.x)**2 + (h.origin.y - h.twin.origin.y)**2, reverse=True)
+
+    # Remove diagonals if resulting polygons, starting with the longest one
+    for i in range(len(diagonals)):
+        diagonals[i].twin.marked = True
+        if not diagonals[i].marked and convex_after_deleting(diagonals[i]):
+            dcel.delete_edge(diagonals[i])
+
+    # Unmark all edges for later computations:
+    for h in dcel.half_edges:
+        h.marked = False
+            
 
 def bruteforce_merge_indirect_neighbours(dcel: DCEL):
     """
@@ -91,60 +86,54 @@ def bruteforce_merge_indirect_neighbours(dcel: DCEL):
             return False
 
         # If neither of the four new corners in the polygon are concave, we can merge
-        edge1_twin_prev = edge1.twin.prev
-        while edge1_twin_prev.origin == edge1.twin.origin:
-            edge1_twin_prev = edge1_twin_prev.prev
-        edge2_twin_next = edge2.twin.next
-        while edge2_twin_next.twin.origin == edge2.origin:
-            edge2_twin_next = edge2_twin_next.next
-
-        edge2_twin_prev = edge2.twin.prev
-        while edge2_twin_prev.origin == edge2.twin.origin:
-            edge2_twin_prev = edge2_twin_prev.prev
-        edge1_twin_next = edge1.twin.next
-        while edge1_twin_next.twin.origin == edge1.origin:
-            edge1_twin_next = edge1_twin_next.next
-        
         if ((edge1.twin.origin != edge2.origin and
-            get_direction(edge1_twin_prev.origin, edge1.twin.origin, edge2.origin) != Direction.LEFT and
-            get_direction(edge1.twin.origin, edge2.origin, edge2_twin_next.twin.origin) != Direction.LEFT or
+            get_direction(edge1.twin.prev.origin, edge1.twin.origin, edge2.origin) != Direction.LEFT and
+            get_direction(edge1.twin.origin, edge2.origin, edge2.twin.next.twin.origin) != Direction.LEFT or
             edge1.twin.origin == edge2.origin and
-            get_direction(edge1_twin_prev.origin, edge2.origin, edge2_twin_next.twin.origin) != Direction.LEFT
+            get_direction(edge1.twin.prev.origin, edge2.origin, edge2.twin.next.twin.origin) != Direction.LEFT
             ) and
             (edge2.twin.origin != edge1.origin and
-            get_direction(edge2_twin_prev.origin, edge2.twin.origin, edge1.origin) != Direction.LEFT and
-            get_direction(edge2.twin.origin, edge1.origin, edge1_twin_next.twin.origin) != Direction.LEFT or
+            get_direction(edge2.twin.prev.origin, edge2.twin.origin, edge1.origin) != Direction.LEFT and
+            get_direction(edge2.twin.origin, edge1.origin, edge1.twin.next.twin.origin) != Direction.LEFT or
             edge2.twin.origin == edge1.origin and
-            get_direction(edge2_twin_prev.origin, edge1.origin, edge1_twin_next.twin.origin) != Direction.LEFT
+            get_direction(edge2.twin.prev.origin, edge1.origin, edge1.twin.next.twin.origin) != Direction.LEFT
             )):
             return True
         else:
             return False
 
     def merge(edge1, edge2):
-        h1 = HalfEdge(edge1.twin.origin)
-        h2 = HalfEdge(edge2.origin)
-        h1.twin = h2
-        h2.twin = h1
+        if edge1.twin.origin != edge2.origin:
+            h1 = HalfEdge(edge1.twin.origin)
+            h2 = HalfEdge(edge2.origin)
+            h1.twin = h2
+            h2.twin = h1
 
-        h1.prev = edge1.twin.prev
-        edge1.twin.prev.next = h1
-        h1.next = edge2.twin.next
-        edge2.twin.next.prev = h1
-        h2.incident_face = dummy_face
+            h1.prev = edge1.twin.prev
+            edge1.twin.prev.next = h1
+            h1.next = edge2.twin.next
+            edge2.twin.next.prev = h1
+            h2.incident_face = dummy_face
+        else:
+            edge1.twin.prev.next = edge2.twin.next
+            edge2.twin.next.prev = edge1.twin.prev
 
-        h3 = HalfEdge(edge2.twin.origin)
-        h4 = HalfEdge(edge1.origin)
-        h3.twin = h4
-        h4.twin = h3
+        if edge2.twin.origin != edge1.origin:
+            h3 = HalfEdge(edge2.twin.origin)
+            h4 = HalfEdge(edge1.origin)
+            h3.twin = h4
+            h4.twin = h3
 
-        h3.prev = edge2.twin.prev
-        edge2.twin.prev.next = h3
-        h3.next = edge1.twin.next
-        edge1.twin.next.prev = h3
-        h4.incident_face = dummy_face
+            h3.prev = edge2.twin.prev
+            edge2.twin.prev.next = h3
+            h3.next = edge1.twin.next
+            edge1.twin.next.prev = h3
+            h4.incident_face = dummy_face
+        else:
+            edge2.twin.prev.next = edge1.twin.next
+            edge1.twin.next.prev = edge2.twin.prev
 
-        edge = h1
+        edge = edge1.twin.prev.next
         while edge.incident_face != edge1.twin.incident_face:
             edge.incident_face = edge1.twin.incident_face
             edge = edge.next
@@ -163,5 +152,26 @@ def bruteforce_merge_indirect_neighbours(dcel: DCEL):
             if did_merge:
                 break
 
+
+def convex_after_deleting(edge: HalfEdge):
+    """
+    Returns whether the face resulting from the deletion of edge will be convex.
+    """
+    # We can't merge with an exterior face
+    if edge.twin.incident_face.type != FaceType.INTERIOR:
+        return False
+
+    # If the faces share multiple edges we can't delete only one of them.
+    # The current implementation of the DCEL does not allow for the deletion of multiple edges at once
+    # Note that since we don't introduce steiner points two different convex faces can in fact never share more than one edge.
+    if edge.twin.incident_face == edge.next.twin.incident_face:
+        return False
+
+    # If neither of the two new corners in the polygon are concave, we can merge
+    if (get_direction(edge.twin.prev.origin, edge.next.origin, edge.next.next.origin) != Direction.LEFT and
+            get_direction(edge.prev.origin, edge.origin, edge.twin.next.next.origin) != Direction.LEFT):
+        return True
+    else:
+        return False
 
 

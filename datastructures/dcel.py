@@ -276,12 +276,10 @@ class DCEL:
         for f in self.interior_faces():
             polygon = list()
             e = f.outer_component
-            if not (e.origin.x == e.next.origin.x and e.origin.y == e.next.origin.y): # When merging non-adjacent faces we may insert edges of 0 length, we don't want to report these in our solution
-                polygon.append({"x": e.origin.x, "y": e.origin.y})
+            polygon.append({"x": e.origin.x, "y": e.origin.y})
             e = e.prev
             while e != f.outer_component:
-                if not (e.origin.x == e.next.origin.x and e.origin.y == e.next.origin.y): # When merging non-adjacent faces we may insert edges of 0 length, we don't want to report these in our solution
-                    polygon.append({"x": e.origin.x, "y": e.origin.y})
+                polygon.append({"x": e.origin.x, "y": e.origin.y})
                 e = e.prev
             polygons.append(polygon)
 
