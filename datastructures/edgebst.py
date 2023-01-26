@@ -33,6 +33,9 @@ class EdgebstNode:
         self.right_end = right_end
 
     def insert_interval(self, val, right_end, y):
+        """
+        Inserts a new interval node into the tree, used by insert()
+        """
         if not self.val:
             self.val = val
             self.right_end = right_end
