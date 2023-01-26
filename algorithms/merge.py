@@ -36,7 +36,7 @@ def hertel_mehlhorn(dcel: DCEL, permutation=None):
     if permutation:
         permutation(diagonals=diagonals)
 
-    # Remove diagonals if resulting polygons, starting with the longest one
+    # For each diagonal, remove it if the resulting face is convex
     for i in range(len(diagonals)):
         diagonals[i].twin.marked = True
         if not diagonals[i].marked and convex_after_deleting(diagonals[i]):
